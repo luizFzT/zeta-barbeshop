@@ -12,6 +12,10 @@ All notable changes to the Zeta Barbershop project will be documented in this fi
 - Dashboard redesign (`DashboardPage.jsx`, `.css`): Centered layout horizontally for bigger screens to mirror mobile harmony.
 - Fixed animated queue timer synchronization bug on `ClientQueuePage.jsx`. The SVG path now correctly uses a normalized `pathLength` to match the CSS rotation of the glowing dot.
 
+### UI/UX Polish
+- **Landing Page Hero:** Enlarged the main cyberpunk logo (200px) and forced a circular mask to enhance the aesthetic. Reengineered the header position to relative, fixing overlap conflicts with the hero text. Moved the theme toggle icon to the top-right corner.
+- **Authentication Screens:** Applied the same circular mask to the main logo on the `LoginPage` and `RegisterPage` to maintain visual consistency.
+
 ### Added
 - **PWA Capabilities:** Added `manifest.json` pointing to the new Cyberpunk shield logo, allowing users to install the system to their phone home screen with a proper native App Icon. Replaced the generic Vite favicons.
 - **Analytics Tab:** Restored the "Analytics" (Estatísticas) tab to the Barber Dashboard's bottom navigation, correctly rendering the `StatsSection` component for performance insights.
