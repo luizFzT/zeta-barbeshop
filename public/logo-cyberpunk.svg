@@ -1,0 +1,137 @@
+<svg width="100%" height="100%" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Dark Background Gradient -->
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" stop-color="#111122" />
+      <stop offset="100%" stop-color="#05050A" />
+    </radialGradient>
+    
+    <!-- Neon Purple Glow -->
+    <filter id="glow-purple" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur1" />
+      <feGaussianBlur stdDeviation="16" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Neon Cyan Glow -->
+    <filter id="glow-cyan" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur1" />
+      <feGaussianBlur stdDeviation="12" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&amp;display=swap');
+      .zeta { font-family: 'Orbitron', sans-serif; font-size: 80px; font-weight: 900; fill: none; stroke: #ff99ff; stroke-width: 4; letter-spacing: 2px; }
+      .zeta-fill { font-family: 'Orbitron', sans-serif; font-size: 80px; font-weight: 900; fill: rgba(168,85,247, 0.4); letter-spacing: 2px; }
+      .barbershop { font-family: 'Orbitron', sans-serif; font-size: 32px; font-weight: 700; fill: #66ffff; letter-spacing: 6px; }
+    </style>
+    
+    <linearGradient id="shield-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="rgba(168,85,247, 0.2)" />
+      <stop offset="100%" stop-color="rgba(34,211,238, 0.05)" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="600" fill="url(#bg)" />
+  
+  <g transform="translate(400, 320)">
+    
+    <!-- Outer Shield / Diamond Shape (Cyan) -->
+    <polygon points="0,-220 220,-220 260,-120 0,180 -260,-120 -220,-220" 
+             fill="url(#shield-grad)" 
+             stroke="#22d3ee" stroke-width="4" 
+             filter="url(#glow-cyan)" opacity="0.8"/>
+             
+    <!-- Inner Shield (Purple) -->
+    <polygon points="0,-200 180,-200 220,-80 0,150 -220,-80 -180,-200" 
+             fill="none" 
+             stroke="#a855f7" stroke-width="6" 
+             filter="url(#glow-purple)"/>
+             
+    <polygon points="0,-180 150,-180 180,-60 0,120 -180,-60 -150,-180" 
+             fill="none" 
+             stroke="#ff99ff" stroke-width="2" 
+             opacity="0.6"/>
+
+    <!-- Barbershop Pole (Center) -->
+    <g transform="translate(0, 10)" filter="url(#glow-cyan)">
+      <!-- Main Cylinder -->
+      <rect x="-24" y="-80" width="48" height="150" rx="10" fill="none" stroke="#22d3ee" stroke-width="6"/>
+      <!-- Top Cap -->
+      <path d="M -30,-80 Q 0,-100 30,-80 Z" fill="none" stroke="#22d3ee" stroke-width="5"/>
+      <circle cx="0" cy="-90" r="10" fill="#22d3ee"/>
+      <!-- Bottom Cap -->
+      <path d="M -30,70 Q 0,90 30,70 Z" fill="none" stroke="#22d3ee" stroke-width="5"/>
+      <circle cx="0" cy="80" r="10" fill="#22d3ee"/>
+      
+      <!-- Stripes (Purple) -->
+      <g filter="url(#glow-purple)">
+        <path d="M -24,-60 L 24,-40" stroke="#a855f7" stroke-width="12" />
+        <path d="M -24,-30 L 24,-10" stroke="#a855f7" stroke-width="12" />
+        <path d="M -24,0 L 24,20" stroke="#a855f7" stroke-width="12" />
+        <path d="M -24,30 L 24,50" stroke="#a855f7" stroke-width="12" />
+      </g>
+    </g>
+
+    <!-- Crossed Scissors (Neon Purple) -->
+    <g filter="url(#glow-purple)">
+      <!-- Left to Right Scissor -->
+      <g transform="translate(-10, 0) rotate(45)">
+        <!-- Blade -->
+        <path d="M -150,0 L 80,-10 L 100,0 L 80,10 Z" fill="none" stroke="#a855f7" stroke-width="5"/>
+        <path d="M -80,0 L 60,0" stroke="#ff99ff" stroke-width="2"/> <!-- Highlight -->
+        <!-- Handle -->
+        <circle cx="120" cy="0" r="24" fill="none" stroke="#a855f7" stroke-width="6"/>
+        <circle cx="120" cy="0" r="16" fill="none" stroke="#ff99ff" stroke-width="2"/>
+        <!-- Arm to handle -->
+        <path d="M 100,0 L 96,0" stroke="#a855f7" stroke-width="8"/>
+        <!-- Ring Spike -->
+        <path d="M 144,0 L 160,0" stroke="#a855f7" stroke-width="5"/>
+      </g>
+      
+      <!-- Right to Left Scissor -->
+      <g transform="translate(10, 0) rotate(135)">
+        <!-- Blade -->
+        <path d="M -150,0 L 80,-10 L 100,0 L 80,10 Z" fill="none" stroke="#a855f7" stroke-width="5"/>
+        <path d="M -80,0 L 60,0" stroke="#ff99ff" stroke-width="2"/> <!-- Highlight -->
+        <!-- Handle -->
+        <circle cx="120" cy="0" r="24" fill="none" stroke="#a855f7" stroke-width="6"/>
+        <circle cx="120" cy="0" r="16" fill="none" stroke="#ff99ff" stroke-width="2"/>
+        <!-- Arm to handle -->
+        <path d="M 100,0 L 96,0" stroke="#a855f7" stroke-width="8"/>
+        <!-- Ring Spike -->
+        <path d="M 144,0 L 160,0" stroke="#a855f7" stroke-width="5"/>
+      </g>
+      
+      <!-- Center Pivot -->
+      <circle cx="0" cy="0" r="8" fill="#111" stroke="#22d3ee" stroke-width="3" filter="none"/>
+    </g>
+
+    <!-- Typography -->
+    <g transform="translate(0, -180)">
+      <!-- ZETA Text Background Fill -->
+      <text x="0" y="50" class="zeta-fill" text-anchor="middle">ZETA</text>
+      <!-- ZETA Neon Outline -->
+      <text x="0" y="50" class="zeta" text-anchor="middle" filter="url(#glow-purple)">ZETA</text>
+      
+      <text x="0" y="100" class="barbershop" text-anchor="middle" filter="url(#glow-cyan)">BARBERSHOP</text>
+    </g>
+    
+    <!-- Ambient Particles -->
+    <circle cx="-120" cy="-20" r="2" fill="#22d3ee" filter="url(#glow-cyan)"/>
+    <circle cx="140" cy="50" r="3" fill="#a855f7" filter="url(#glow-purple)"/>
+    <circle cx="-150" cy="80" r="1.5" fill="#ff99ff"/>
+    <circle cx="100" cy="-60" r="2.5" fill="#22d3ee" filter="url(#glow-cyan)"/>
+    
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+{
+    "short_name": "Zeta",
+    "name": "Zeta Barbershop",
+    "icons": [
+        {
+            "src": "logo-cyberpunk-image.png",
+            "type": "image/png",
+            "sizes": "192x192 512x512"
+        }
+    ],
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#0a0a0f",
+    "background_color": "#0a0a0f"
+}

@@ -1,0 +1,82 @@
+.shell-layout {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.shell-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10, 10, 15, 0.8);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: var(--glass-border);
+}
+
+.shell-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    padding: 0 var(--space-5);
+    max-width: 100%;
+}
+
+.shell-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    text-decoration: none;
+    color: var(--text-primary);
+}
+
+.shell-logo {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--neon-secondary));
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: var(--shadow-glow);
+}
+
+.shell-brand-name {
+    font-family: var(--font-display);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+}
+
+.shell-brand-name span {
+    color: var(--accent);
+}
+
+.shell-user {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.shell-email {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+}
+
+.shell-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .shell-email {
+        display: none;
+    }
+
+    .shell-body {
+        flex-direction: column;
+        overflow: auto;
+    }
+}

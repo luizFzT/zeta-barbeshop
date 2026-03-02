@@ -1,0 +1,38 @@
+<svg viewBox="0 0 400 400" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500&amp;display=swap');
+      .logo-text { font-family: 'Montserrat', sans-serif; fill: #ffffff; }
+    </style>
+  </defs>
+  
+  <!-- Fundo escuro roxo/acinzentado -->
+  <rect width="400" height="400" fill="#635868"/>
+  
+  <!-- Quadrado arredondado cinza claro -->
+  <rect x="141" y="90" width="118" height="118" rx="32" fill="#ebe9ec"/>
+  
+  <!-- Círculo escuro central -->
+  <circle cx="200" cy="149" r="51" fill="#635868"/>
+  
+  <!-- Elementos da lâmina de barbear -->
+  <g transform="translate(200, 149) rotate(-35)">
+    
+    <!-- Base branca sólida -->
+    <polygon points="-34,10 16,10 -22,28" fill="#ffffff" />
+    
+    <!-- Contorno da lâmina -->
+    <path d="M-36,-14 L26,-14 L26,-9 L24,-7 L24,2 L26,4 L26,9 L-36,9 L-36,4 L-34,2 L-34,-7 L-36,-9 Z" 
+          fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linejoin="round"/>
+    
+    <!-- Detalhe interno da lâmina (linha central com círculos cortados) -->
+    <path d="M-24,-2.5 L14,-2.5" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="-16" cy="-2.5" r="2.5" fill="none" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="-5" cy="-2.5" r="4" fill="none" stroke="#ffffff" stroke-width="2"/>
+    <circle cx="6" cy="-2.5" r="2.5" fill="none" stroke="#ffffff" stroke-width="2"/>
+  </g>
+  
+  <!-- Texto -->
+  <text x="200" y="244" class="logo-text" font-size="36" font-weight="500" text-anchor="middle" letter-spacing="-0.5">zeta</text>
+  <text x="200" y="280" class="logo-text" font-size="34" font-weight="400" text-anchor="middle" letter-spacing="-1.2">barbershop</text>
+</svg>
