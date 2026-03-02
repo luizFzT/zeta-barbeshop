@@ -19,9 +19,9 @@ export default function LandingPage() {
         <div className="landing">
             {/* Header */}
             <header className="landing-header">
-                <nav className="landing-nav container">
-                    <div className="landing-brand">
-                        <img src="/logo-cyberpunk-image.png" alt="Zeta Logo" style={{ height: '40px', width: 'auto', borderRadius: '8px' }} />
+                <nav className="lp-navbar container">
+                    <div className="lp-brand">
+                        <img src="/logo-new-hero.jpg" alt="Zeta Barbershop" style={{ height: '60px', borderRadius: 'var(--radius-md)' }} />
                     </div>
                     <div>
                         <button className="btn btn-ghost btn-icon" onClick={toggleTheme} title="Alternar Tema" style={{ fontSize: '1.2rem' }}>

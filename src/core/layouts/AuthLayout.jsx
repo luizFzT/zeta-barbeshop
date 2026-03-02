@@ -7,7 +7,7 @@ export default function AuthLayout() {
             <div className="auth-bg-pattern"></div>
             <div className="auth-content">
                 <div className="auth-brand">
-                    <img src="/logo-cyberpunk-image.png" alt="Zeta Logo" className="auth-logo-img" />
+                    <img src="/logo-new-hero.jpg" alt="Zeta Logo" className="auth-logo-img" style={{ borderRadius: 'var(--radius-lg)' }} />
                     <p className="auth-subtitle">Gerencie sua barbearia de forma inteligente</p>
                 </div>
                 <div className="auth-card card card-glass animate-scale-in">
