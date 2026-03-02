@@ -4,8 +4,8 @@
 
 /* Nav */
 .landing-header {
-    padding: var(--space-6) 0;
-    position: absolute;
+    padding: var(--space-6) 0 0 0;
+    position: relative;
     width: 100%;
     z-index: 100;
 }

@@ -19,11 +19,11 @@ export default function LandingPage() {
         <div className="landing">
             {/* Header */}
             <header className="landing-header">
-                <nav className="lp-navbar container">
+                <nav className="lp-navbar container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', width: '100%', paddingBottom: 'var(--space-8)' }}>
                     <div className="lp-brand">
-                        <img src="/logo-new-hero.jpg" alt="Zeta Barbershop" style={{ height: '60px', borderRadius: 'var(--radius-md)' }} />
+                        <img src="/logo-new-hero.jpg" alt="Zeta Barbershop" style={{ width: '200px', height: '200px', objectFit: 'cover', borderRadius: '50%', boxShadow: '0 15px 40px rgba(0,0,0,0.6)', marginTop: 'var(--space-4)' }} />
                     </div>
-                    <div>
+                    <div style={{ position: 'absolute', right: 'var(--space-4)', top: 'var(--space-4)' }}>
                         <button className="btn btn-ghost btn-icon" onClick={toggleTheme} title="Alternar Tema" style={{ fontSize: '1.2rem' }}>
                             <span className="material-symbols-outlined">{theme === 'dark' ? 'light_mode' : 'dark_mode'}</span>
                         </button>
@@ -38,7 +38,6 @@ export default function LandingPage() {
 
                     {/* Left Column: Copy & CTA */}
                     <div className="hero-text-content">
-                        <span className="hero-badge badge badge-accent">SaaS de Agendamentos Totalmente Vendável</span>
                         <h1 className="hero-title">
                             Sua barbearia na <br />
                             <span className="hero-highlight">palma da mão</span> do cliente.
