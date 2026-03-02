@@ -1,6 +1,8 @@
 # Zeta Barbershop SaaS
 
-![Zeta Barbershop Hero](public/logo-cyberpunk.svg)
+<p align="center">
+  <img src="public/logo-new-hero.jpg" alt="Zeta Barbershop Neon Logo" width="250" height="250" style="border-radius: 50%; box-shadow: 0 10px 30px rgba(168, 85, 247, 0.4);" />
+</p>
 
 Zeta Barbershop is a modern, real-time Queue Management System built as a SaaS platform specifically designed for autonomous barbers. It completely replaces outdated booking systems by offering a dynamic, zero-friction smart queue.
 
