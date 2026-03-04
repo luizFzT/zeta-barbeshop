@@ -7,54 +7,49 @@
 /* ===== CSS TOKENS ===== */
 :root {
   /* Backgrounds */
-  --bg-primary: #05050A;
-  /* Void Black */
-  --bg-secondary: #191022;
-  /* Stitch background-dark */
-  --bg-card: rgba(255, 255, 255, 0.015);
-  /* Glass */
-  --bg-surface-dark: #261933;
-  /* Translucent surface */
-  --bg-card-hover: #22223a;
-  --bg-glass: rgba(255, 255, 255, 0.03);
-  --bg-glass-hover: rgba(255, 255, 255, 0.06);
-  --bg-input: #16162a;
+  --bg-primary: #09090B;
+  --bg-secondary: #09090B;
+  --bg-card: #18181b;
+  --bg-card-hover: #27272a;
+  --bg-glass: rgba(255, 255, 255, 0.015);
+  --bg-glass-hover: rgba(255, 255, 255, 0.03);
+  --bg-input: #09090B;
 
   /* Text */
-  --text-primary: #ffffff;
-  --text-secondary: #c4c4d4;
-  --text-muted: #8b8b9e;
-  --text-dim: #5a5a6e;
-  --text-inverse: #0a0a0f;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #475569;
+  --text-dim: #334155;
+  --text-inverse: #09090B;
 
-  /* Neon Accent */
-  --accent: #7311d4;
-  --accent-hover: #5b0ca8;
-  --accent-dim: #44087d;
-  --accent-light: rgba(115, 17, 212, 0.15);
-  --accent-glow: rgba(115, 17, 212, 0.4);
+  /* Neon Accent (A COR DA ZETA) */
+  --accent: #A855F7;
+  --accent-hover: #9333EA;
+  --accent-dim: #7E22CE;
+  --accent-light: rgba(168, 85, 247, 0.15);
+  --accent-glow: rgba(168, 85, 247, 0.3);
 
-  /* Secondary Neon */
-  --neon-secondary: #00f0ff;
-  --neon-secondary-dim: #00b3bf;
-  --neon-secondary-light: rgba(0, 240, 255, 0.15);
-  --neon-secondary-glow: rgba(0, 240, 255, 0.3);
+  /* Secondary Neon (deprecated) */
+  --neon-secondary: transparent;
+  --neon-secondary-dim: transparent;
+  --neon-secondary-light: transparent;
+  --neon-secondary-glow: transparent;
 
   /* Semantic */
-  --success: #22c55e;
-  --success-bg: rgba(34, 197, 94, 0.15);
-  --danger: #ef4444;
+  --success: #10B981;
+  --success-bg: rgba(16, 185, 129, 0.15);
+  --danger: #EF4444;
   --danger-bg: rgba(239, 68, 68, 0.15);
-  --warning: #fbbf24;
-  --info: #3b82f6;
+  --warning: #F59E0B;
+  --info: #3B82F6;
 
-  /* Borders */
+  /* Borders / UI */
   --border: rgba(255, 255, 255, 0.08);
-  --border-light: rgba(255, 255, 255, 0.12);
+  --border-light: rgba(255, 255, 255, 0.04);
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-display: 'Inter', sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -79,7 +74,7 @@
   --space-16: 4rem;
   --space-20: 5rem;
 
-  /* Radius */
+  /* Radius (Geometria Cirurgica) */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -87,12 +82,12 @@
   --radius-full: 9999px;
 
   /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 10px rgba(115, 17, 212, 0.5), 0 0 20px rgba(115, 17, 212, 0.3);
-  --shadow-glow-strong: 0 0 15px rgba(115, 17, 212, 0.8), 0 0 30px rgba(115, 17, 212, 0.5);
-  --shadow-glow-cyan: 0 0 10px rgba(0, 240, 255, 0.4), 0 0 20px rgba(0, 240, 255, 0.2);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 15px rgba(168, 85, 247, 0.3);
+  --shadow-glow-strong: 0 0 25px rgba(168, 85, 247, 0.6);
+  --shadow-glow-cyan: transparent;
 
   /* Glassmorphism 2.0 */
   --glass-blur: blur(24px);
@@ -172,6 +167,7 @@ body {
 }
 
 /* Background Ambient Glow */
+/* Textura Ambiente OBRIGATÓRIA: Padrão sutil "Linhas de Fluxo" no background */
 body::before {
   content: '';
   position: fixed;
@@ -179,20 +175,17 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background:
-    radial-gradient(ellipse at top, rgba(168, 85, 247, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom right, rgba(34, 211, 238, 0.04) 0%, transparent 50%);
+  background-image: repeating-linear-gradient(0deg,
+      rgba(255, 255, 255, 0.015) 0px,
+      rgba(255, 255, 255, 0.015) 1px,
+      transparent 1px,
+      transparent 40px);
   pointer-events: none;
   z-index: -1;
-  transition: opacity var(--transition-base);
 }
 
 body.light-theme::before {
-  opacity: 0.5;
-  /* Reduce intensity slightly on light mode */
-  background:
-    radial-gradient(ellipse at top, rgba(147, 51, 234, 0.05) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom right, rgba(8, 145, 178, 0.03) 0%, transparent 50%);
+  opacity: 0;
 }
 
 #root {
@@ -208,7 +201,7 @@ a {
 }
 
 a:hover {
-  color: var(--neon-secondary);
+  color: var(--accent);
 }
 
 img {
@@ -246,7 +239,7 @@ select {
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--accent), var(--neon-secondary));
+  color: var(--accent);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -285,7 +278,7 @@ select {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
   z-index: 1;
 }
 
@@ -337,7 +330,7 @@ select {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+  background: var(--accent);
   color: white;
   box-shadow: var(--shadow-sm);
 }
@@ -359,7 +352,7 @@ select {
 }
 
 .btn-neon {
-  background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+  background: var(--accent);
   color: white;
   box-shadow: var(--shadow-glow);
 }
@@ -501,7 +494,7 @@ select {
 
 .badge-cyan {
   background: var(--neon-secondary-light);
-  color: var(--neon-secondary);
+  color: var(--accent);
   border: 1px solid rgba(34, 211, 238, 0.3);
 }
 
@@ -710,7 +703,7 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 2px solid var(--neon-secondary);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -734,14 +727,25 @@ a:focus:not(:focus-visible) {
 
 /* Ambient Animations from AI Studio */
 .breathe {
-    animation: breathe 4s ease-in-out infinite;
+  animation: breathe 4s ease-in-out infinite;
 }
+
 @keyframes breathe {
-    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.3)); }
-    50% { transform: scale(1.02); filter: drop-shadow(0 0 25px rgba(168, 85, 247, 0.6)); }
+
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 15px rgba(168, 85, 247, 0.3));
+  }
+
+  50% {
+    transform: scale(1.02);
+    filter: drop-shadow(0 0 25px rgba(168, 85, 247, 0.6));
+  }
 }
+
 .progress-ring__circle {
-    transition: stroke-dashoffset 0.35s;
-    transform: rotate(-90deg);
-    transform-origin: 50% 50%;
+  transition: stroke-dashoffset 0.35s;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
 }

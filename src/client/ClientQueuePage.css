@@ -210,7 +210,7 @@
     margin-bottom: var(--space-6);
     background: rgba(34, 211, 238, 0.1);
     border: 1px solid var(--neon-secondary-glow);
-    color: var(--neon-secondary);
+    color: var(--accent);
     font-size: var(--font-size-xs);
     font-weight: 700;
     letter-spacing: 1px;
@@ -221,7 +221,7 @@
 .dot-pulse {
     width: 6px;
     height: 6px;
-    background: var(--neon-secondary);
+    background: var(--accent);
     border-radius: 50%;
     box-shadow: 0 0 8px var(--neon-secondary-glow);
     animation: pulse 2s infinite;
@@ -364,7 +364,7 @@
 
 .cq-loyalty-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--neon-secondary));
+    background: linear-gradient(90deg, var(--accent), var(--accent));
     border-radius: var(--radius-full);
     transition: width 0.6s ease;
     min-width: 6px;
@@ -828,7 +828,7 @@
     font-size: 4rem;
     font-weight: 900;
     font-family: var(--font-display);
-    background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+    background: var(--accent);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

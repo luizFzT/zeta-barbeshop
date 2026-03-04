@@ -31,7 +31,7 @@
 
 /* Base Buttons for LP */
 .btn-cta {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--neon-secondary) 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%);
     color: #fff;
     font-size: var(--font-size-lg);
     font-weight: 800;
@@ -128,7 +128,7 @@
 }
 
 .hero-highlight {
-    background: linear-gradient(to right, var(--accent) 0%, var(--neon-secondary) 100%);
+    background: linear-gradient(to right, var(--accent) 0%, var(--accent) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -177,7 +177,7 @@
 
 .pricing-current small {
     font-size: 1.25rem;
-    color: var(--neon-secondary);
+    color: var(--accent);
 }
 
 .hero-cta {
@@ -302,7 +302,7 @@
     left: 0;
     width: 100%;
     height: 4px;
-    background: linear-gradient(90deg, var(--accent) 0%, var(--neon-secondary) 100%);
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent) 100%);
     box-shadow: 0 0 20px rgba(168, 85, 247, 0.8);
     transition: height 0.3s ease;
 }
@@ -679,7 +679,7 @@
 
 .mockup-btn {
     width: 100%;
-    background: linear-gradient(135deg, var(--accent) 0%, var(--neon-secondary) 100%);
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%);
     color: white;
     border: none;
     padding: 14px;
@@ -703,7 +703,7 @@
 }
 
 .mockup-status-box h2 {
-    color: var(--neon-primary);
+    color: var(--accent);
     margin: 0 0 4px 0;
     font-size: 32px;
     font-weight: 800;

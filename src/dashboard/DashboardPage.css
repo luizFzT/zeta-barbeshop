@@ -26,7 +26,7 @@
     top: 0;
     z-index: 20;
     width: 100%;
-    background: rgba(5, 5, 10, 0.85);
+    background: var(--bg-glass);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--border);
@@ -151,7 +151,7 @@
     left: 0;
     width: 100%;
     z-index: 30;
-    background: rgba(5, 5, 10, 0.95);
+    background: var(--bg-glass);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -189,7 +189,7 @@
 }
 
 .dash-nav-btn.active .material-symbols-outlined {
-    background: linear-gradient(135deg, var(--neon-secondary), var(--accent));
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -305,7 +305,7 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.5), transparent);
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
     z-index: 1;
 }
 
@@ -733,7 +733,7 @@
 
 .dash-chart-bar {
     width: 100%;
-    background: linear-gradient(180deg, var(--neon-secondary), var(--accent));
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
     border-radius: var(--radius-sm);
     transition: height 0.5s ease;
     min-height: 4px;
@@ -944,7 +944,7 @@
 }
 
 .fin-promo-btn {
-    background: linear-gradient(135deg, #fb923c, #f97316) !important;
+    background: var(--accent) !important;
     color: white !important;
     border: none !important;
     font-weight: 700 !important;
@@ -1309,7 +1309,7 @@
 }
 
 .stat-icon.highlight {
-    color: var(--neon-secondary);
+    color: var(--accent);
     filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
 }
 

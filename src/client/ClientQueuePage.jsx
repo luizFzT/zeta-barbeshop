@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../shared/hooks/useAuth';
 import { useBarbershop } from '../shared/hooks/useBarbershop';
 import { useTheme } from '../shared/hooks/useTheme';
+import { SVGCursorTimeline } from '../core/components/SVGCursorTimeline';
 import './ClientQueuePage.css';
 
 // Helper: send notification via Service Worker or fallback
@@ -367,7 +368,7 @@ export default function ClientQueuePage() {
 
     return (
         <div className="client-queue">
-            <div className="cq-bg-pattern"></div>
+            {/* The global body::before provides the flow texture. We removed cq-bg-pattern. */}
 
             {/* Notification Banner */}
             {showNotification && (
@@ -444,8 +445,8 @@ export default function ClientQueuePage() {
 
                                     if (myPosition === 1 && toleranceCountdown) {
                                         return (
-                                            <div className="card card-glass" style={{ marginBottom: 'var(--space-5)', textAlign: 'center', border: '1px solid var(--neon-secondary)' }}>
-                                                <div style={{ fontSize: '12px', color: 'var(--neon-secondary)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Tempo de Tolerância</div>
+                                            <div className="card card-glass" style={{ marginBottom: 'var(--space-5)', textAlign: 'center', border: '1px solid var(--accent)' }}>
+                                                <div style={{ fontSize: '12px', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Tempo de Tolerância</div>
                                                 <div style={{ fontSize: '32px', fontWeight: '800', fontFamily: 'monospace' }}>
                                                     {String(toleranceCountdown.m).padStart(2, '0')}:{String(toleranceCountdown.s).padStart(2, '0')}
                                                 </div>
@@ -478,15 +479,20 @@ export default function ClientQueuePage() {
 
                                 {/* Position Details & Queue Timeline */}
                                 <div className="card card-glass" style={{ marginBottom: 'var(--space-5)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
                                         <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Sua Posição na Fila</h3>
                                         <div style={{ background: 'var(--bg-secondary)', padding: '4px 12px', borderRadius: '20px', fontSize: '14px', fontWeight: '800', color: 'var(--accent)' }}>
                                             {myPosition}º
                                         </div>
                                     </div>
 
+                                    {/* The New SVG Narrative: Journey of Waiting */}
+                                    <div className="py-4 my-2 opacity-90 relative z-10">
+                                        <SVGCursorTimeline queueLength={queue.length} position={myPosition} />
+                                    </div>
+
                                     {/* Vertical Timeline showing only people ahead */}
-                                    <div className="cq-timeline" style={{ position: 'relative', paddingLeft: '20px', marginTop: 'var(--space-4)' }}>
+                                    <div className="cq-timeline" style={{ position: 'relative', paddingLeft: '20px', marginTop: 'var(--space-2)' }}>
                                         {queue.slice(0, myPosition).map((entry, index) => {
                                             const isMe = entry.id === myEntryId;
                                             const isNext = index === 0;
@@ -549,7 +555,7 @@ export default function ClientQueuePage() {
                                             <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{loyaltyInfo.progress}/{loyaltyInfo.target} cortes</div>
                                         </div>
                                         <div style={{ width: '100%', height: '8px', background: 'var(--bg-secondary)', borderRadius: '4px', overflow: 'hidden', marginBottom: '12px' }}>
-                                            <div style={{ width: `${(loyaltyInfo.progress / loyaltyInfo.target) * 100}%`, height: '100%', background: 'linear-gradient(90deg, var(--neon-secondary), var(--accent))', borderRadius: '4px' }}></div>
+                                            <div style={{ width: `${(loyaltyInfo.progress / loyaltyInfo.target) * 100}%`, height: '100%', background: 'linear-gradient(135deg, var(--accent), var(--accent-hover)))', borderRadius: '4px' }}></div>
                                         </div>
                                         {loyaltyInfo.freeCutsAvailable > 0 ? (
                                             <div style={{ fontSize: '13px', color: '#4ade80', fontWeight: '600' }}>🎁 {loyaltyInfo.freeCutsAvailable} corte(s) grátis disponível!</div>
@@ -588,21 +594,28 @@ export default function ClientQueuePage() {
                                 {/* AI Studio Reactive Timer & Barbers */}
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-4)', margin: 'var(--space-4) 0' }}>
                                     <div className="glass-card" style={{ padding: '8px 24px', borderRadius: 'var(--radius-full)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--neon-secondary)', boxShadow: '0 0 8px var(--neon-secondary)', animation: 'pulse 2s infinite' }}></div>
-                                        <span style={{ color: 'var(--neon-secondary)', fontSize: '13px', fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase' }}>Fila Aberta</span>
+                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)', animation: 'pulse 2s infinite' }}></div>
+                                        <span style={{ color: 'var(--accent)', fontSize: '13px', fontWeight: '600', letterSpacing: '1px', textTransform: 'uppercase' }}>Fila Aberta</span>
                                     </div>
 
                                     {(() => {
-                                        const PERCENT_LIMIT = 120; // 2 hours fills the visual circle 100%
-                                        const fillPercent = Math.min(100, Math.max(5, (joinFlowEstimatedMinutes / PERCENT_LIMIT) * 100));
+                                        const MAX_MINUTES = 300; // Limit for visual scale (5 hours = 100% full circle)
+                                        const currentMinutes = joinFlowEstimatedMinutes || 0;
+                                        // Calculate percentage (0 to 100), clamp to 100 max, keep at least 2% so dot is visible
+                                        const fillPercent = Math.max(2, Math.min(100, (currentMinutes / MAX_MINUTES) * 100));
 
+                                        // Stroke dash offset calculation. 
+                                        // pathLength="100". offset=0 means fully drawn. offset=100 means fully empty.
+                                        const strokeOffset = 100 - fillPercent;
+
+                                        // Dot rotation. 0% = 0deg (top). 100% = 360deg.
                                         const dotRotation = (fillPercent / 100) * 360;
 
                                         return (
                                             <div className="relative cursor-pointer group" style={{ position: 'relative', width: '260px', height: '260px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                 {/* Background Track */}
                                                 <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} viewBox="0 0 260 260">
-                                                    <circle cx="130" cy="130" fill="none" r="120" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="8" transform="rotate(-90 130 130)"></circle>
+                                                    <circle cx="130" cy="130" fill="none" r="120" stroke="var(--border)" strokeWidth="8" transform="rotate(-90 130 130)"></circle>
                                                 </svg>
                                                 {/* Filled Progress Stroke */}
                                                 <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', filter: 'drop-shadow(0 0 10px rgba(168,85,247,0.5))' }} viewBox="0 0 260 260">
@@ -613,36 +626,52 @@ export default function ClientQueuePage() {
                                                         </linearGradient>
                                                     </defs>
                                                     <circle
-                                                        className="progress-ring__circle"
                                                         cx="130" cy="130" fill="none" r="120"
                                                         stroke="url(#gradientReactive)" strokeWidth="8" strokeLinecap="round"
                                                         pathLength="100"
                                                         strokeDasharray="100 100"
-                                                        strokeDashoffset={100 - fillPercent}
+                                                        strokeDashoffset={strokeOffset}
                                                         transform="rotate(-90 130 130)"
-                                                        style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+                                                        style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
                                                     ></circle>
                                                 </svg>
 
-                                                {/* Synchronized Glowing Dot */}
-                                                <div style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', transform: `rotate(${dotRotation}deg)`, transition: 'transform 0.5s ease-in-out', zIndex: 10 }}>
+                                                {/* Synchronized Glowing Dot (Attached to the stroke tip) */}
+                                                <div style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: '50%', transform: `rotate(${dotRotation}deg)`, transition: 'transform 1s ease-in-out', zIndex: 10 }}>
                                                     {/* Magic number top: 2px aligns exactly with stroke center, radius=120, viewBox=260 */}
-                                                    <div style={{ position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', width: '16px', height: '16px', background: '#fff', borderRadius: '50%', boxShadow: '0 0 20px #fff, 0 0 10px var(--neon-secondary)' }}></div>
+                                                    <div style={{ position: 'absolute', top: '2px', left: '50%', transform: 'translateX(-50%)', width: '16px', height: '16px', background: 'var(--text-primary)', borderRadius: '50%', boxShadow: '0 0 20px var(--text-primary), 0 0 10px var(--accent)' }}></div>
                                                 </div>
 
                                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', zIndex: 20 }}>
-                                                    <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '4.5rem', color: '#fff', letterSpacing: '-2px', textShadow: '0 0 15px rgba(255,255,255,0.3)', lineHeight: '1', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                                                        {joinFlowEstimatedMinutes}<span style={{ fontSize: '1.5rem', opacity: 0.8, letterSpacing: '0', marginLeft: '-4px' }}>m</span>
-                                                    </h1>
+                                                    {(() => {
+                                                        const totalMins = joinFlowEstimatedMinutes || 0;
+                                                        const h = Math.floor(totalMins / 60);
+                                                        const m = totalMins % 60;
+                                                        const isLong = totalMins >= 60;
+                                                        return (
+                                                            <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: isLong ? (m > 0 ? '3.2rem' : '4rem') : '4.5rem', color: 'var(--text-primary)', letterSpacing: '-2px', textShadow: '0 0 15px rgba(168,85,247,0.3)', lineHeight: '1', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
+                                                                {isLong ? (
+                                                                    <>
+                                                                        {h}<span style={{ fontSize: '1.5rem', opacity: 0.8, letterSpacing: '0', marginLeft: '2px', marginRight: '6px' }}>h</span>
+                                                                        {m > 0 && <>{m}<span style={{ fontSize: '1.5rem', opacity: 0.8, letterSpacing: '0', marginLeft: '2px' }}>m</span></>}
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        {totalMins}<span style={{ fontSize: '1.5rem', opacity: 0.8, letterSpacing: '0', marginLeft: '2px' }}>m</span>
+                                                                    </>
+                                                                )}
+                                                            </h1>
+                                                        );
+                                                    })()}
                                                     <p style={{ color: 'var(--text-muted)', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', marginTop: '12px' }}>Tempo Estimado</p>
                                                 </div>
-                                                <div className="breathe" style={{ position: 'absolute', top: '16px', left: '16px', right: '16px', bottom: '16px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.05)', opacity: 0.5 }}></div>
+                                                <div className="breathe" style={{ position: 'absolute', top: '16px', left: '16px', right: '16px', bottom: '16px', borderRadius: '50%', border: '1px solid var(--border)', opacity: 0.5 }}></div>
                                             </div>
                                         );
                                     })()}
 
                                     <div style={{ textAlign: 'center', marginBottom: 'var(--space-2)' }}>
-                                        <h2 style={{ color: '#fff', fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: '500' }}>Corte de Cabelo</h2>
+                                        <h2 style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: '500' }}>Corte de Cabelo</h2>
                                         <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Temos <strong style={{ color: 'var(--accent)' }}>{queue.length}</strong> {queue.length === 1 ? 'cliente' : 'clientes'} na fila</p>
                                     </div>
                                 </div>
@@ -650,7 +679,7 @@ export default function ClientQueuePage() {
                                 {/* Professional Identity Card */}
                                 <div style={{ width: '100%', marginBottom: 'var(--space-6)', marginTop: 'var(--space-4)' }}>
                                     <div style={{ padding: '0 var(--space-4)', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                                        <h3 style={{ color: 'rgba(255,255,255,0.8)', fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: '500', letterSpacing: '1px' }}>Profissional</h3>
+                                        <h3 style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', fontSize: '14px', fontWeight: '500', letterSpacing: '1px' }}>Profissional</h3>
                                     </div>
                                     <div style={{ display: 'flex', padding: '0 var(--space-4) 16px', gap: '16px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', cursor: 'default', opacity: 1 }}>
@@ -664,7 +693,7 @@ export default function ClientQueuePage() {
                                                 )}
                                                 <div style={{ position: 'absolute', top: '-4px', right: '-4px', width: '16px', height: '16px', background: 'var(--accent)', borderRadius: '50%', border: '2px solid #0A0A0F', boxShadow: '0 0 8px #a855f7' }}></div>
                                             </div>
-                                            <span style={{ color: '#fff', fontFamily: 'var(--font-display)', fontSize: '13px', letterSpacing: '-0.5px' }}>{barbershop.barber_name || 'Barbeiro'}</span>
+                                            <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', fontSize: '13px', letterSpacing: '-0.5px' }}>{barbershop.barber_name || 'Barbeiro'}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -688,13 +717,20 @@ export default function ClientQueuePage() {
                                                         type="checkbox"
                                                         checked={selectedServices.includes(s.id)}
                                                         onChange={() => toggleService(s.id)}
-                                                        style={{ accentColor: 'var(--accent)', width: '18px', height: '18px' }}
+                                                        style={{ display: 'none' }}
                                                     />
+                                                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${selectedServices.includes(s.id) ? 'var(--accent)' : 'var(--border)'}`, background: selectedServices.includes(s.id) ? 'var(--accent)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s ease', flexShrink: 0 }}>
+                                                        {selectedServices.includes(s.id) && (
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                                            </svg>
+                                                        )}
+                                                    </div>
                                                     <div style={{ flex: 1 }}>
                                                         <div style={{ fontSize: '14px', fontWeight: '600' }}>{s.name}</div>
                                                         <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', gap: '12px', marginTop: '4px' }}>
                                                             <span>⏳ {s.duration_minutes}m</span>
-                                                            {s.price && <span style={{ color: 'var(--neon-secondary)' }}>R$ {Number(s.price).toFixed(2)}</span>}
+                                                            {s.price && <span style={{ color: 'var(--accent)' }}>R$ {Number(s.price).toFixed(2)}</span>}
                                                         </div>
                                                     </div>
                                                 </label>

@@ -18,17 +18,19 @@ The system calculates estimated wait times based on the complex physical reality
 - **QR Code Generator:** Built-in QR Code generation for the Barbershop storefront, ready to print and display on the counter.
 
 ### For the Client (Client App)
-- **Live Tracking:** An elegant, gamified countdown dashboard showing their exact wait time and position in the queue.
+### For the Client (Client App)
+- **High-Fidelity Proportional Timer:** An elegant, gamified countdown dashboard. The "Tempo Estimado" ring is a mathematical progress bar that shrinks in physical length as the wait time decreases, synchronized with a glowing focus dot.
+- **Live Tracking:** Real-time updates on queue position and estimated journey.
 - **Zero Friction:** No app installation required. Clients scan a QR code and join directly via the WebApp.
 - **Service Selection:** Clients select exactly what cut they want so the algorithm knows how long they will take.
 
 ## 🎨 Design System
 
 We employ a premium, cyberpunk-inspired **Dark Mode Glassmorphism** aesthetic.
-- Deep Navy/Black backgrounds (`#0a061e`)
-- Translucent frosted glass cards (`rgba(30, 27, 75, 0.4)`)
-- Vibrant Neon Accents (Purple `#a855f7` and Pink `#ec4899`)
-- High-quality Google Material Symbols.
+- **Deep Navy/Black backgrounds:** (`#0a061e`)
+- **Single Accent Identity:** Exclusively using Neon Purple (`#a855f7`) to create a focused, professional high-end brand feel.
+- **Ambient Texture:** Subtle horizontal line patterns representing the flow of time and digital organization.
+- **Frosted Glass:** Translucent cards (`rgba(30, 27, 75, 0.4)`) with subtle glow borders.
 
 ## 🛠 Tech Stack
 

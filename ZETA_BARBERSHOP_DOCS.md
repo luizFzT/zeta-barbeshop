@@ -38,9 +38,9 @@ Para transmitir modernidade, tecnologia e um aspecto "premium", a aplicação ut
 
 ### 3.2 Paleta de Cores
 - **Fundo Principal (Background):** `#0a061e` (Um azul marinho quase preto, profundo e sofisticado).
-- **Superfícies (Cards/Modais):** `rgba(30, 27, 75, 0.4)` a `0.6` (Roxo escuro translúcido promovendo o efeito glass) protegido por bordas sutis `rgba(168, 85, 247, 0.2)`.
-- **Acento Primário (Cor da Marca):** `#a855f7` (Roxo Neon / Violeta). Usado em botões principais, ícones de destaque e glow effects.
-- **Acento Secundário:** `#ec4899` (Rosa Neon). Usado em gradientes junto com o roxo (ex: `linear-gradient(135deg, #a855f7, #ec4899)`).
+- **Textura Ambiente:** O sistema utiliza um padrão de linhas horizontais sutis (0.03% de opacidade) para preencher o fundo, simbolizando "frequências" e a medição do tempo.
+- **Acento Primário Único (Cor da Marca):** `#a855f7` (Roxo Neon / Violeta). Fugimos da estética de gradientes coloridos múltiplos para focar em uma cor de acento sólida e imersiva. Usado em botões principais, ícones de destaque e glow effects.
+- **Cards e Superfícies:** `rgba(30, 27, 75, 0.4)` a `0.6` (Roxo escuro translúcido promovendo o efeito glass) protegido por bordas sutis `rgba(168, 85, 247, 0.2)`.
 - **Textos:**
   - Primário: `#f8fafc` (Branco gelo para alta legibilidade).
   - Secundário: `#94a3b8` (Cinza azulado escuro para labels e textos auxiliares).
@@ -117,8 +117,11 @@ Estrutura simulada atualmente no Hook `useBarbershop.jsx` e projetada para o ban
 
 ## 6. Lógica de Negócio e Workflows Principais
 
-### 6.1 Cálculo Dinâmico de Tempo de Espera com Física Oculta
+### 6.1 Cálculo Dinâmico de Tempo de Espera e Visualização Proporcional
 Quando João entra na fila, o sistema busca todos na frente dele, lê as arrays de `services` de cada um, soma os `duration_minutes` vinculados, e subtrai o tempo que o "Em Atendimento" atual já gastou.
+
+**Visualização Proporcional (The Clock Ring):** Para tangibilizar o tempo, o círculo de contagem não é apenas decorativo. Ele é uma barra de progresso física onde o comprimento da linha roxa diminui proporcionalmente conforme o tempo passa (baseado em um máximo de 300 minutos). O ponto luminoso (dot) acompanha a ponta dessa linha, girando lentamente como um ponteiro de relógio moderno.
+
 **Injeção de Fricção (Buffer Invisível):** Para absorver a realidade física da barbearia (limpar bancada, cobrar cliente, etc.), o sistema injeta de forma invisível um buffer estrutural de **2 a 3 minutos extras** por cliente. O cliente final não vê o detalhe, apenas uma estimativa que entrega o serviço muitas vezes "antes do prazo", gerando surpresa positiva.
 **Pausa Estratégica:** Em imprevistos maiores, o Barbeiro aciona um botão de atraso global no painel, adicionando ex. 15 minutos na fila inteira e broadcastando um aviso de "Ajuste em andamento", blindando a reputação do app.
 

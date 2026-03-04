@@ -2,6 +2,8 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useAuth } from '../shared/hooks/useAuth';
 import { useBarbershop } from '../shared/hooks/useBarbershop';
 import { QRCodeCanvas } from 'qrcode.react';
+import { SVGSoundwaves } from '../core/components/SVGSoundwaves';
+import { SVGMagnetLine } from '../core/components/SVGMagnetLine';
 import './DashboardPage.css';
 
 const TABS = [
@@ -293,11 +295,14 @@ function QueueSection({
             </div>
 
             {/* Quick Actions / Add Manual */}
-            <div className="dash-card dash-quick-actions">
-                <div className="dash-card-header">
+            <div className="dash-card dash-quick-actions relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-full opacity-30 pointer-events-none" style={{ height: '40px' }}>
+                    <SVGMagnetLine />
+                </div>
+                <div className="dash-card-header relative z-10 pt-2">
                     <h2 className="dash-card-title">Ações Rápidas</h2>
                 </div>
-                <form className="dash-add-row" onSubmit={handleAddManual}>
+                <form className="dash-add-row relative z-10" onSubmit={handleAddManual}>
                     <input
                         className="input"
                         type="text"
@@ -389,7 +394,11 @@ function QueueSection({
                                         ) : (
                                             <div className="dash-tl-avatar manual-auth">{initials}</div>
                                         )}
-                                        {index === 0 && <div className="dash-tl-pulse"></div>}
+                                        {index === 0 ? (
+                                            <div style={{ position: 'absolute', right: '-10px', top: '50%', transform: 'translateY(-50%) translateX(100%)', zIndex: 10 }}>
+                                                <SVGSoundwaves className="opacity-90 animate-fade-in" />
+                                            </div>
+                                        ) : null}
                                     </div>
 
                                     {/* Content Card */}
@@ -774,8 +783,8 @@ function SettingsSection({ form, setForm, onSave, saved, avatarUrl }) {
                             type="number"
                             min="1"
                             max="100"
-                            value={form.loyalty_target}
-                            onChange={e => setForm(f => ({ ...f, loyalty_target: parseInt(e.target.value) || 10 }))}
+                            value={form.loyalty_target === '' ? '' : form.loyalty_target}
+                            onChange={e => setForm(f => ({ ...f, loyalty_target: e.target.value === '' ? '' : (parseInt(e.target.value) || 10) }))}
                         />
                     </div>
 
@@ -787,8 +796,8 @@ function SettingsSection({ form, setForm, onSave, saved, avatarUrl }) {
                             type="number"
                             min="1"
                             max="15"
-                            value={form.tolerance_minutes}
-                            onChange={e => setForm(f => ({ ...f, tolerance_minutes: parseInt(e.target.value) || 5 }))}
+                            value={form.tolerance_minutes === '' ? '' : form.tolerance_minutes}
+                            onChange={e => setForm(f => ({ ...f, tolerance_minutes: e.target.value === '' ? '' : (parseInt(e.target.value) || 5) }))}
                         />
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Tempo que o cliente tem pra chegar após ser chamado</span>
                     </div>
@@ -799,8 +808,8 @@ function SettingsSection({ form, setForm, onSave, saved, avatarUrl }) {
                             type="number"
                             min="3"
                             max="30"
-                            value={form.confirmation_window}
-                            onChange={e => setForm(f => ({ ...f, confirmation_window: parseInt(e.target.value) || 10 }))}
+                            value={form.confirmation_window === '' ? '' : form.confirmation_window}
+                            onChange={e => setForm(f => ({ ...f, confirmation_window: e.target.value === '' ? '' : (parseInt(e.target.value) || 10) }))}
                         />
                         <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Tempo que o cliente tem pra confirmar presença</span>
                     </div>

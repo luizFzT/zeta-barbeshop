@@ -8,7 +8,7 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(10, 10, 15, 0.8);
+    background: var(--bg-glass);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
     border-bottom: var(--glass-border);
@@ -34,7 +34,7 @@
 .shell-logo {
     width: 36px;
     height: 36px;
-    background: linear-gradient(135deg, var(--accent), var(--neon-secondary));
+    background: linear-gradient(135deg, var(--accent), var(--accent));
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
