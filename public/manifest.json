@@ -16,7 +16,7 @@
             "purpose": "any maskable"
         }
     ],
-    "start_url": "/app",
+    "start_url": "/",
     "scope": "/",
     "display": "standalone",
     "orientation": "portrait",

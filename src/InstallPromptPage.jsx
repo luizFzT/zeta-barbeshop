@@ -1,7 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './InstallPromptPage.css';
 
 export default function InstallPromptPage() {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        // Detect if the app is already installed and running in standalone mode (PWA)
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+        if (isStandalone) {
+            navigate('/auth/login');
+        }
+    }, [navigate]);
+
     return (
         <div className="install-prompt-container">
             <div className="install-prompt-content">
