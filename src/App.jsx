@@ -18,8 +18,8 @@ export default function App() {
                 <AuthProvider>
                     <BarbershopProvider>
                         <Routes>
-                            {/* Public */}
-                            <Route path="/" element={<LandingPage />} />
+                            {/* Public - Default to login instead of broken mobile landing page for testing */}
+                            <Route path="/" element={<Navigate to="/auth/login" replace />} />
 
                             {/* PWA entry — skips landing page when opened from home screen */}
                             <Route path="/app" element={<Navigate to="/auth/login" replace />} />
