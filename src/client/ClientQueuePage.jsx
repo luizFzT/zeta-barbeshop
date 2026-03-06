@@ -4,6 +4,7 @@ import { useAuth } from '../shared/hooks/useAuth';
 import { useBarbershop } from '../shared/hooks/useBarbershop';
 import { useTheme } from '../shared/hooks/useTheme';
 import { SVGCursorTimeline } from '../core/components/SVGCursorTimeline';
+import { copyToClipboard } from '../shared/utils/clipboard';
 import './ClientQueuePage.css';
 
 // Helper: send notification via Service Worker or fallback
@@ -1001,9 +1002,13 @@ export default function ClientQueuePage() {
 
                             <button
                                 className="btn btn-secondary btn-block mt-4"
-                                onClick={() => {
-                                    navigator.clipboard.writeText(window.location.href);
-                                    alert("Link copiado!");
+                                onClick={async () => {
+                                    const success = await copyToClipboard(window.location.href);
+                                    if (success) {
+                                        alert("Link copiado!");
+                                    } else {
+                                        alert("Não foi possível copiar o link ativo. Copie manualmente da barra do seu navegador.");
+                                    }
                                 }}
                             >
                                 Copiar Link da Fila

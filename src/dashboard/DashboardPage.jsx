@@ -4,6 +4,7 @@ import { useBarbershop } from '../shared/hooks/useBarbershop';
 import { QRCodeCanvas } from 'qrcode.react';
 import { SVGSoundwaves } from '../core/components/SVGSoundwaves';
 import { SVGMagnetLine } from '../core/components/SVGMagnetLine';
+import { copyToClipboard } from '../shared/utils/clipboard';
 import './DashboardPage.css';
 
 const TABS = [
@@ -1316,10 +1317,14 @@ function QRCodeSection({ barbershop }) {
         setTimeout(() => { win.print(); }, 300);
     }, [barbershop, publicUrl]);
 
-    const handleCopy = useCallback(() => {
-        navigator.clipboard.writeText(publicUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+    const handleCopy = useCallback(async () => {
+        const success = await copyToClipboard(publicUrl);
+        if (success) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } else {
+            alert('Acesso à área de transferência bloqueado pelo navegador. Link gerado: ' + publicUrl);
+        }
     }, [publicUrl]);
 
     return (
