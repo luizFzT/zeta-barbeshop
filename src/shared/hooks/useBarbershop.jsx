@@ -243,17 +243,60 @@ export function BarbershopProvider({ children }) {
         if (data) setLoyalty(data);
     }
 
-    // Fetch history
-    async function fetchHistory(barbershopId) {
+    // Fetch history, stats and financials
+    const fetchStatsAndFinancial = useCallback(async (barbershopId) => {
         if (isDemoMode) return;
         const { data } = await supabase
             .from('service_history')
             .select('*')
             .eq('barbershop_id', barbershopId)
             .order('served_at', { ascending: false })
-            .limit(20);
-        if (data) setHistory(data);
-    }
+            .limit(500); // Fetch recent history for accurate monthly/weekly stats
+
+        if (data) {
+            setHistory(data.slice(0, 20)); // Last 20 for history feed
+
+            // Format for financialData
+            const mappedFinancial = data.map(d => ({
+                id: d.id,
+                service_id: d.service_id,
+                service_name: d.service_name,
+                price: Number(d.price) || 0,
+                date: d.served_at,
+                customer_name: d.customer_name
+            }));
+            setFinancialData(mappedFinancial);
+
+            // Calculate stats
+            const now = new Date();
+            let todayServed = 0;
+            const distinctClients = new Set(data.map(d => d.customer_name)).size;
+
+            const weeklyData = [0, 0, 0, 0, 0, 0, 0];
+            const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+
+            data.forEach(d => {
+                const dateMs = new Date(d.served_at).getTime();
+                const daysAgo = Math.floor((endOfToday - dateMs) / 86400000);
+
+                if (daysAgo === 0) {
+                    todayServed++;
+                }
+
+                if (daysAgo >= 0 && daysAgo < 7) {
+                    const index = 6 - daysAgo;
+                    weeklyData[index]++;
+                }
+            });
+
+            setStats(prev => ({
+                ...prev,
+                todayServed,
+                totalClients: distinctClients,
+                weeklyData: weeklyData,
+            }));
+        }
+    }, [isDemoMode]);
 
     // Fetch barbershop for owner
     const fetchOwnerBarbershop = useCallback(async (userId) => {
@@ -278,10 +321,10 @@ export function BarbershopProvider({ children }) {
             setBarbershop(data);
             await fetchQueue(data.id);
             await fetchLoyalty(data.id);
-            await fetchHistory(data.id);
+            await fetchStatsAndFinancial(data.id);
         }
         setLoading(false);
-    }, []);
+    }, [fetchStatsAndFinancial]);
 
     // Fetch barbershop by slug (public)
     const fetchBySlug = useCallback(async (slug) => {
@@ -591,7 +634,46 @@ export function BarbershopProvider({ children }) {
             }
         }
 
+        // Insert into service_history for financial / stats tracking
+        if (next.selected_services && next.selected_services.length > 0 && barbershop?.services) {
+            const historyRecords = next.selected_services.map(srvId => {
+                const serviceMatch = barbershop.services.find(s => s.id === srvId);
+                return {
+                    barbershop_id: barbershop.id,
+                    user_id: next.user_id || null,
+                    customer_name: next.customer_name,
+                    service_id: srvId,
+                    service_name: serviceMatch ? serviceMatch.name : 'Serviço Personalizado',
+                    price: serviceMatch ? Number(serviceMatch.price) || 0 : 0,
+                    served_at: new Date().toISOString()
+                };
+            });
+
+            const { error: historyError } = await supabase
+                .from('service_history')
+                .insert(historyRecords);
+
+            if (historyError) {
+                console.error('[callNext] Error logging service history:', historyError);
+            }
+        } else {
+            // Se o usuário não selecionou serviços, gera um ticket zerado só para constar na estatística diária e histórico
+            await supabase.from('service_history').insert([{
+                barbershop_id: barbershop.id,
+                user_id: next.user_id || null,
+                customer_name: next.customer_name,
+                service_id: null,
+                service_name: 'Corte (Não especificado)',
+                price: 0,
+                served_at: new Date().toISOString()
+            }]);
+        }
+
         setQueue(remaining.map((item, i) => ({ ...item, position: i + 1 })));
+
+        // Atualiza as finanças para refletir a nova venda no painel
+        await fetchStatsAndFinancial(barbershop.id);
+
         return next;
     };
 

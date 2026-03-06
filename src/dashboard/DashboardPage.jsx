@@ -324,7 +324,16 @@ function QueueSection({
     manualName, setManualName, handleAddManual,
     manualServices, toggleManualService, history, financialData
 }) {
-    const todayRevenue = financialData?.dailyTotal || 0;
+    const todayRevenue = financialData
+        ? financialData
+            .filter(d => {
+                const dateMs = new Date(d.date).getTime();
+                const startOfToday = new Date();
+                startOfToday.setHours(0, 0, 0, 0);
+                return dateMs >= startOfToday.getTime();
+            })
+            .reduce((sum, item) => sum + (Number(item.price) || 0), 0)
+        : 0;
 
     return (
         <div className="dash-section stagger">
