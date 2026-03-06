@@ -895,8 +895,8 @@ function SettingsSection({ form, setForm, onSave, saved, avatarUrl }) {
                             {(!form.services || form.services.length === 0) && <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Nenhum serviço cadastrado.</p>}
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 80px 80px auto', gap: '8px', alignItems: 'end' }}>
-                            <div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'end' }}>
+                            <div style={{ flex: '1 1 200px' }}>
                                 <label style={{ fontSize: '12px' }}>Nome do Serviço</label>
                                 <input
                                     className="input"
@@ -904,29 +904,33 @@ function SettingsSection({ form, setForm, onSave, saved, avatarUrl }) {
                                     value={newService.name}
                                     onChange={e => setNewService({ ...newService, name: e.target.value })}
                                     placeholder="Ex: Corte Degrade"
+                                    style={{ width: '100%' }}
                                 />
                             </div>
-                            <div>
+                            <div style={{ flex: '0 1 80px' }}>
                                 <label style={{ fontSize: '12px' }}>Minutos</label>
                                 <input
                                     className="input"
                                     type="number"
                                     value={newService.duration_minutes}
                                     onChange={e => setNewService({ ...newService, duration_minutes: e.target.value })}
+                                    style={{ width: '100%' }}
                                 />
                             </div>
-                            <div>
+                            <div style={{ flex: '0 1 80px' }}>
                                 <label style={{ fontSize: '12px' }}>Preço R$</label>
                                 <input
                                     className="input"
                                     type="number"
                                     value={newService.price}
                                     onChange={e => setNewService({ ...newService, price: e.target.value })}
+                                    style={{ width: '100%' }}
                                 />
                             </div>
                             <button
                                 type="button"
                                 className="btn btn-secondary"
+                                style={{ flex: '1 1 120px', padding: '12px var(--space-4)' }}
                                 onClick={() => {
                                     if (!newService.name.trim()) return;
                                     const serviceToAdd = {
