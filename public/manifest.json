@@ -4,14 +4,14 @@
     "description": "Gerencie a fila da sua barbearia em tempo real.",
     "icons": [
         {
-            "src": "logo-cyberpunk-image.png",
-            "type": "image/png",
+            "src": "logo-new-hero.jpg",
+            "type": "image/jpeg",
             "sizes": "192x192",
             "purpose": "any maskable"
         },
         {
-            "src": "logo-cyberpunk-image.png",
-            "type": "image/png",
+            "src": "logo-new-hero.jpg",
+            "type": "image/jpeg",
             "sizes": "512x512",
             "purpose": "any maskable"
         }
