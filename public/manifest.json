@@ -4,13 +4,13 @@
     "description": "Gerencie a fila da sua barbearia em tempo real.",
     "icons": [
         {
-            "src": "logo-new-hero.jpg",
+            "src": "logo-pwa-app.jpg",
             "type": "image/jpeg",
             "sizes": "192x192",
             "purpose": "any maskable"
         },
         {
-            "src": "logo-new-hero.jpg",
+            "src": "logo-pwa-app.jpg",
             "type": "image/jpeg",
             "sizes": "512x512",
             "purpose": "any maskable"

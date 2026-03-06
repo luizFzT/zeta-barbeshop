@@ -1,0 +1,92 @@
+.install-prompt-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-default);
+    color: var(--text-primary);
+    padding: var(--space-4);
+    text-align: center;
+}
+
+.install-prompt-content {
+    max-width: 400px;
+    width: 100%;
+}
+
+.install-logo-wrapper {
+    margin-bottom: var(--space-6);
+    display: flex;
+    justify-content: center;
+}
+
+.install-logo {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 10px 30px rgba(118, 56, 250, 0.4);
+    border: 2px solid var(--accent);
+}
+
+.install-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: var(--space-2);
+    color: var(--text-primary);
+}
+
+.install-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-8);
+    line-height: 1.6;
+}
+
+.install-instructions {
+    background: var(--surface-1);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    text-align: left;
+    border: 1px solid var(--border-color);
+}
+
+.install-instructions h3 {
+    font-size: 1.1rem;
+    margin-bottom: var(--space-4);
+    text-align: center;
+    color: var(--accent);
+}
+
+.instruction-step {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+}
+
+.instruction-step:last-child {
+    margin-bottom: 0;
+}
+
+.step-icon {
+    font-size: 1.5rem;
+    color: var(--primary);
+    margin-top: 2px;
+}
+
+.instruction-step p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text-primary);
+}
+
+.instruction-step strong {
+    color: white;
+}
+
+.install-footer {
+    margin-top: var(--space-8);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}

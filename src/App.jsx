@@ -5,7 +5,7 @@ import { ThemeProvider } from './shared/hooks/useTheme';
 import ProtectedRoute from './core/guards/ProtectedRoute';
 import AuthLayout from './core/layouts/AuthLayout';
 import ShellLayout from './core/layouts/ShellLayout';
-import LandingPage from './LandingPage';
+import InstallPromptPage from './InstallPromptPage';
 import LoginPage from './auth/LoginPage';
 import RegisterPage from './auth/RegisterPage';
 import DashboardPage from './dashboard/DashboardPage';
@@ -18,8 +18,8 @@ export default function App() {
                 <AuthProvider>
                     <BarbershopProvider>
                         <Routes>
-                            {/* Public Landing Page */}
-                            <Route path="/" element={<LandingPage />} />
+                            {/* Force PWA Installation Prompt Instead of Landing Page */}
+                            <Route path="/" element={<InstallPromptPage />} />
 
                             {/* PWA entry — skips landing page when opened from home screen */}
                             <Route path="/app" element={<Navigate to="/auth/login" replace />} />
