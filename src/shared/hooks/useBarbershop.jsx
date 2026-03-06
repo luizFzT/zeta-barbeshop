@@ -595,6 +595,15 @@ export function BarbershopProvider({ children }) {
             .update({ status: 'called' })
             .eq('id', next.id);
 
+        // Update Barbershop with the new chair time (the called client's expected duration)
+        const chairTime = next.total_duration || 25;
+        await supabase
+            .from('barbershops')
+            .update({ wait_time_minutes: chairTime, updated_at: new Date().toISOString() })
+            .eq('id', barbershop.id);
+
+        setBarbershop(prev => prev ? { ...prev, wait_time_minutes: chairTime } : prev);
+
         // Re-number positions
         const remaining = queue.slice(1);
         for (let i = 0; i < remaining.length; i++) {

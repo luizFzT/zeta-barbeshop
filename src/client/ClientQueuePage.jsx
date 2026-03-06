@@ -134,30 +134,50 @@ export default function ClientQueuePage() {
     useEffect(() => {
         if (!barbershop) return;
 
+        // The person currently in the chair is represented by barbershop.wait_time_minutes
+        const chairTime = barbershop.wait_time_minutes || 0;
+
+        if (myPosition === 1) {
+            // Se sou o 1º da fila, meu tempo não depende mais de quem está na frente.
+            // Depende apenas se a minha tolerância já começou a contar ou do Atraso Global.
+            if (toleranceEnd) {
+                setTargetTime(toleranceEnd); // Seguir a regressiva da tolerância
+                prevTimeRef.current = null;
+            } else {
+                // Ainda aguardando o barbeiro confirmar/chamar o próximo, fico com o tempo da cadeira
+                const target = Date.now() + chairTime * 60000;
+                setTargetTime(target);
+                prevTimeRef.current = chairTime;
+            }
+            return;
+        }
+
         const peopleAhead = myPosition ? queue.slice(0, myPosition - 1) : queue;
-        // Sum of actual durations + 3-minute buffer per person for transition/cleaning
-        const totalMinutes = peopleAhead.reduce((acc, curr) => acc + (curr.total_duration || 25) + 3, 0);
+        // Sum of actual durations + 3-minute buffer per person + Active Chair Time
+        const queueMinutes = peopleAhead.reduce((acc, curr) => acc + (curr.total_duration || 25) + 3, 0);
+        const totalMinutes = queueMinutes + chairTime;
 
         if (!targetTime) {
             const target = Date.now() + totalMinutes * 60000;
             setTargetTime(target);
             prevTimeRef.current = totalMinutes;
         } else if (prevTimeRef.current !== null && totalMinutes !== prevTimeRef.current) {
-            // Only update target if the calculated total changes due to queue moving
+            // Only update target if the calculated total changes due to queue moving or barber adding delay
             const diffMinutes = totalMinutes - prevTimeRef.current;
             setTargetTime(prev => prev + (diffMinutes * 60000));
             prevTimeRef.current = totalMinutes;
         }
-    }, [barbershop, queue, myPosition, targetTime]);
+    }, [barbershop, queue, myPosition, targetTime, toleranceEnd]);
 
     // Derived State for Join Flow: Queue Duration + Selected Services Duration
     const joinFlowEstimatedMinutes = barbershop ? (() => {
+        const chairTime = barbershop.wait_time_minutes || 0;
         const queueDuration = queue.reduce((acc, curr) => acc + (curr.total_duration || 25) + 3, 0);
         const selectedServicesDuration = selectedServices.reduce((acc, serviceId) => {
             const service = barbershop.services?.find(s => s.id === serviceId);
             return acc + (service?.duration_minutes || 0);
         }, 0);
-        return queueDuration + selectedServicesDuration;
+        return chairTime + queueDuration + selectedServicesDuration;
     })() : 0;
 
     // Real-time countdown timer
@@ -221,6 +241,17 @@ export default function ClientQueuePage() {
         if (!myEntryId || !joinedQueue || confirmRequestedRef.current) return;
         const myEntry = queue.find(e => e.id === myEntryId);
         if (!myEntry || myEntry.confirmation_status !== 'none') return;
+        if (myPosition === null) return;
+
+        // Regra de Ouro: Só peça confirmação se você for o Nº 1, OU se o tempo real do Nº 2+ for <= 15 min E o Número 1 já tiver confirmado/falhado
+        // Isso evita que o App atropele o Nº 1 pedindo confirmação pro 2, 3 de uma vez se a fila for muito rápida.
+        if (myPosition > 1) {
+            const num1 = queue[0];
+            if (num1 && num1.confirmation_status === 'none') {
+                // O 1º da fila ainda nem respondeu o Zap dele, segure a onda do 2º.
+                return;
+            }
+        }
 
         // Already confirmed or pending? skip
         if (displayTime.m <= 15 && (displayTime.m > 0 || displayTime.s > 0)) {
@@ -230,7 +261,7 @@ export default function ClientQueuePage() {
             playNotificationSound();
             sendNotification('⏰ Confirme sua presença!', 'Faltam poucos minutos. Confirme que você está a caminho!', 'zeta-confirm');
         }
-    }, [displayTime, myEntryId, joinedQueue, queue, requestConfirmation]);
+    }, [displayTime, myEntryId, joinedQueue, queue, myPosition, requestConfirmation]);
 
     // Confirmation countdown timer
     useEffect(() => {
@@ -542,12 +573,21 @@ export default function ClientQueuePage() {
                                             {/* Glowing ring behind */}
                                             <div style={{ position: 'absolute', top: '-10px', left: '-10px', right: '-10px', bottom: '-10px', borderRadius: '50%', border: '2px dashed var(--accent)', opacity: 0.3, animation: 'spin 15s linear infinite' }}></div>
 
-                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '4px', fontWeight: '600' }}>
-                                                Estimativa
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '4px', fontWeight: '600', textAlign: 'center' }}>
+                                                {myPosition === 1 && toleranceEnd ? 'Tolerância' : 'Estimativa'}
                                             </div>
-                                            <div style={{ fontSize: '42px', fontWeight: '900', fontFamily: 'monospace', lineHeight: '1', color: 'var(--accent)', textShadow: '0 0 10px rgba(139, 92, 246, 0.5)' }}>
-                                                {String(displayTime.m).padStart(2, '0')}<span style={{ opacity: 0.5, animation: 'pulse 2s infinite' }}>:</span>{String(displayTime.s).padStart(2, '0')}
-                                            </div>
+
+                                            {myPosition === 1 && toleranceEnd ? (
+                                                <div style={{ fontSize: '42px', fontWeight: '900', fontFamily: 'monospace', lineHeight: '1', color: toleranceCountdown && toleranceCountdown.m === 0 && toleranceCountdown.s === 0 ? '#ef4444' : 'var(--accent)', textShadow: toleranceCountdown && toleranceCountdown.m === 0 && toleranceCountdown.s === 0 ? '0 0 10px rgba(239, 68, 68, 0.5)' : '0 0 10px rgba(139, 92, 246, 0.5)' }}>
+                                                    {toleranceCountdown ? (
+                                                        <>{String(toleranceCountdown.m).padStart(2, '0')}<span style={{ opacity: 0.5, animation: 'pulse 2s infinite' }}>:</span>{String(toleranceCountdown.s).padStart(2, '0')}</>
+                                                    ) : "00:00"}
+                                                </div>
+                                            ) : (
+                                                <div style={{ fontSize: '42px', fontWeight: '900', fontFamily: 'monospace', lineHeight: '1', color: 'var(--accent)', textShadow: '0 0 10px rgba(139, 92, 246, 0.5)' }}>
+                                                    {String(displayTime.m).padStart(2, '0')}<span style={{ opacity: 0.5, animation: 'pulse 2s infinite' }}>:</span>{String(displayTime.s).padStart(2, '0')}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
