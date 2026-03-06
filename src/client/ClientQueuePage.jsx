@@ -223,7 +223,7 @@ export default function ClientQueuePage() {
                 // Entry removed from queue
                 if (joinedQueue) {
                     setWasExpired(true);
-                    sendNotification('❌ Você saiu da fila', 'Sua vez expirou. Entre novamente se desejar.', 'zeta-expired');
+                    sendNotification('Você saiu da fila', 'Sua vez expirou. Entre novamente se desejar.', 'zeta-expired');
                 }
                 setJoinedQueue(false);
                 setMyPosition(null);
@@ -259,7 +259,7 @@ export default function ClientQueuePage() {
             requestConfirmation(myEntryId);
             setShowConfirmModal(true);
             playNotificationSound();
-            sendNotification('⏰ Confirme sua presença!', 'Faltam poucos minutos. Confirme que você está a caminho!', 'zeta-confirm');
+            sendNotification('Aviso Importante', 'Faltam poucos minutos. Confirme sua presença para não perder a vez!', 'zeta-confirm');
         }
     }, [displayTime, myEntryId, joinedQueue, queue, myPosition, requestConfirmation]);
 
@@ -315,7 +315,7 @@ export default function ClientQueuePage() {
     const prevQueueLenRef = useRef(null);
     useEffect(() => {
         if (prevQueueLenRef.current !== null && queue.length < prevQueueLenRef.current && joinedQueue) {
-            sendNotification('📢 Fila diminuiu!', `Agora há ${queue.length} pessoa(s) na fila. Sua posição pode ter mudado!`, 'zeta-queue-update');
+            sendNotification('Fila Atualizada!', `Agora há ${queue.length} pessoa(s) estimadas na barbearia. Sua vez está mais perto.`, 'zeta-queue-update');
         }
         prevQueueLenRef.current = queue.length;
     }, [queue.length, joinedQueue]);
@@ -324,7 +324,7 @@ export default function ClientQueuePage() {
         if (myEntryId) {
             confirmPresence(myEntryId);
             setShowConfirmModal(false);
-            sendNotification('✅ Presença confirmada!', 'Fique atento, em breve será sua vez!', 'zeta-confirmed');
+            sendNotification('Presença Confirmada!', 'Fique atento, em breve será sua vez!', 'zeta-confirmed');
         }
     }, [myEntryId, confirmPresence]);
 
@@ -422,7 +422,7 @@ export default function ClientQueuePage() {
     if (loading) {
         return (
             <div className="cq-loading">
-                <div className="cq-loading-icon animate-pulse">✂️</div>
+                <span className="material-symbols-outlined cq-loading-icon animate-pulse" style={{ fontSize: '48px', color: 'var(--accent)' }}>content_cut</span>
                 <p>Carregando...</p>
             </div>
         );
@@ -431,7 +431,7 @@ export default function ClientQueuePage() {
     if (notFound) {
         return (
             <div className="cq-not-found">
-                <div className="cq-not-found-icon">😕</div>
+                <span className="material-symbols-outlined cq-not-found-icon" style={{ fontSize: '64px', color: 'var(--error-color)', marginBottom: '16px' }}>error</span>
                 <h1>Barbearia não encontrada</h1>
                 <p>Verifique o endereço e tente novamente</p>
             </div>
@@ -446,12 +446,12 @@ export default function ClientQueuePage() {
 
             {/* Notification Banner */}
             {showNotification && (
-                <div className="cq-notification animate-fade-in" onClick={() => setShowNotification(false)}>
+                <div className="cq-notification animate-fade-in" onClick={() => setShowNotification(false)} style={{ background: 'var(--bg-card)', border: '1px solid var(--accent)', boxShadow: '0 4px 20px rgba(139, 92, 246, 0.4)' }}>
                     <div className="cq-notification-inner">
-                        <span className="cq-notification-icon">🔔</span>
+                        <span className="material-symbols-outlined cq-notification-icon" style={{ color: 'var(--accent)' }}>notifications_active</span>
                         <div>
-                            <strong>Sua vez chegou!</strong>
-                            <p>Você é o próximo, prepare-se!</p>
+                            <strong>É sua vez!</strong>
+                            <p>O barbeiro está te aguardando, prepare-se!</p>
                         </div>
                     </div>
                 </div>
@@ -469,7 +469,7 @@ export default function ClientQueuePage() {
                     <div className="cq-closed-msg card card-glass">
                         <span className="material-symbols-outlined" style={{ fontSize: '48px', opacity: 0.5, marginBottom: '16px' }}>nightlight</span>
                         <p>A barbearia está fechada no momento.</p>
-                        <p className="cq-closed-sub">Volte mais tarde! 😊</p>
+                        <p className="cq-closed-sub">Volte mais tarde!</p>
                     </div>
                 ) : (
                     <>
@@ -487,11 +487,11 @@ export default function ClientQueuePage() {
 
                                 {/* Barber Card & Wait Time */}
                                 <div className="card card-glass cq-barber-card" style={{ padding: 'var(--space-4)', display: 'flex', alignItems: 'center', gap: 'var(--space-4)', marginBottom: 'var(--space-5)' }}>
-                                    <div className="cq-bc-avatar" style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--bg-hover)', border: '2px solid var(--accent)', overflow: 'hidden', flexShrink: 0 }}>
+                                    <div className="cq-bc-avatar" style={{ width: '60px', height: '60px', borderRadius: '50%', background: 'var(--bg-hover)', border: '2px solid var(--accent)', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         {barbershop.avatar_url ? (
                                             <img src={barbershop.avatar_url} alt="Shop" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         ) : (
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '24px' }}>✂️</div>
+                                            <span className="material-symbols-outlined" style={{ fontSize: '28px', color: 'var(--accent)' }}>content_cut</span>
                                         )}
                                     </div>
                                     <div className="cq-bc-info" style={{ flex: 1 }}>
@@ -642,7 +642,9 @@ export default function ClientQueuePage() {
                                             {barbershop.services.map(s => (
                                                 <div key={s.id} className="card card-glass" style={{ minWidth: '160px', padding: 'var(--space-3)', cursor: 'default' }}>
                                                     <div style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
-                                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>⏳ {s.duration_minutes}m</div>
+                                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span> {s.duration_minutes}m
+                                                    </div>
                                                     {s.price && <div style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: '700', marginTop: '8px' }}>R$ {Number(s.price).toFixed(2)}</div>}
                                                 </div>
                                             ))}
@@ -664,7 +666,9 @@ export default function ClientQueuePage() {
                                             <div style={{ width: `${(loyaltyInfo.progress / loyaltyInfo.target) * 100}%`, height: '100%', background: 'linear-gradient(135deg, var(--accent), var(--accent-hover)))', borderRadius: '4px' }}></div>
                                         </div>
                                         {loyaltyInfo.freeCutsAvailable > 0 ? (
-                                            <div style={{ fontSize: '13px', color: '#4ade80', fontWeight: '600' }}>🎁 {loyaltyInfo.freeCutsAvailable} corte(s) grátis disponível!</div>
+                                            <div style={{ fontSize: '13px', color: '#4ade80', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>redeem</span> {loyaltyInfo.freeCutsAvailable} corte(s) grátis disponível!
+                                            </div>
                                         ) : (
                                             <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Faltam {loyaltyInfo.target - loyaltyInfo.progress} cortes para seu brinde.</div>
                                         )}
@@ -707,11 +711,11 @@ export default function ClientQueuePage() {
                             <div className="cq-join-flow animate-fade-in">
                                 {/* Header Info */}
                                 <div className="cq-header text-center" style={{ marginBottom: 'var(--space-6)' }}>
-                                    <div className="cq-avatar" style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--bg-hover)', border: '2px solid var(--accent)', margin: '0 auto var(--space-4)', overflow: 'hidden' }}>
+                                    <div className="cq-avatar" style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--bg-hover)', border: '2px solid var(--accent)', margin: '0 auto var(--space-4)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         {barbershop.avatar_url ? (
                                             <img src={barbershop.avatar_url} alt="Barber" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         ) : (
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: '32px' }}>✂️</div>
+                                            <span className="material-symbols-outlined" style={{ fontSize: '36px', color: 'var(--accent)' }}>content_cut</span>
                                         )}
                                     </div>
                                     <h1 className="cq-name" style={{ fontSize: '24px', fontWeight: '800', fontFamily: 'var(--font-display)' }}>{barbershop.name}</h1>
@@ -855,8 +859,8 @@ export default function ClientQueuePage() {
                                                     </div>
                                                     <div style={{ flex: 1 }}>
                                                         <div style={{ fontSize: '14px', fontWeight: '600' }}>{s.name}</div>
-                                                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', gap: '12px', marginTop: '4px' }}>
-                                                            <span>⏳ {s.duration_minutes}m</span>
+                                                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '12px', marginTop: '4px' }}>
+                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><span className="material-symbols-outlined" style={{ fontSize: '14px' }}>schedule</span> {s.duration_minutes}m</span>
                                                             {s.price && <span style={{ color: 'var(--accent)' }}>R$ {Number(s.price).toFixed(2)}</span>}
                                                         </div>
                                                     </div>
@@ -865,8 +869,8 @@ export default function ClientQueuePage() {
                                         </div>
 
                                         <div className="cq-ssc-actions">
-                                            <button className="btn btn-primary btn-block mb-2" onClick={confirmJoinQueue} disabled={selectedServices.length === 0 || isJoining} style={{ padding: '16px', fontSize: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                {isJoining ? <span className="cq-loading-icon" style={{ fontSize: '20px', animation: 'spin 1s linear infinite' }}>⏳</span> : 'Confirmar e Entrar'}
+                                            <button className="btn btn-primary btn-block mb-2" onClick={confirmJoinQueue} disabled={selectedServices.length === 0 || isJoining} style={{ padding: '16px', fontSize: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}>
+                                                {isJoining ? <span className="material-symbols-outlined cq-loading-icon" style={{ animation: 'spin 1s linear infinite' }}>autorenew</span> : 'Confirmar e Entrar'}
                                             </button>
                                             <button className="btn btn-ghost btn-block" onClick={() => { setShowServiceSelection(false); setSelectedServices([]); }} disabled={isJoining}>
                                                 Voltar
