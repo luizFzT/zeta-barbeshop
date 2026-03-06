@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './shared/hooks/useAuth';
 import { BarbershopProvider } from './shared/hooks/useBarbershop';
 import { ThemeProvider } from './shared/hooks/useTheme';
@@ -20,6 +20,9 @@ export default function App() {
                         <Routes>
                             {/* Public */}
                             <Route path="/" element={<LandingPage />} />
+
+                            {/* PWA entry — skips landing page when opened from home screen */}
+                            <Route path="/app" element={<Navigate to="/auth/login" replace />} />
 
                             {/* Client Queue (public — Google login inside) */}
                             <Route path="/queue/:slug" element={<ClientQueuePage />} />

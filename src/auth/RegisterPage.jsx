@@ -8,9 +8,11 @@ export default function RegisterPage() {
     const [shopName, setShopName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
+    const [successMsg, setSuccessMsg] = useState('');
     const [loading, setLoading] = useState(false);
-    const { signUp, isDemoMode } = useAuth();
+    const { signUp } = useAuth();
     const { createBarbershop } = useBarbershop();
     const navigate = useNavigate();
 
@@ -26,9 +28,10 @@ export default function RegisterPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setSuccessMsg('');
         setLoading(true);
 
-        const { error: signUpError } = await signUp(email, password, name);
+        const { error: signUpError, user: newUser, session } = await signUp(email, password, name);
 
         if (signUpError) {
             setError(signUpError.message || 'Erro ao criar conta');
@@ -36,9 +39,21 @@ export default function RegisterPage() {
             return;
         }
 
-        // Create the barbershop
+        // Se o Supabase exigir confirmação de email, não haverá sessão ativa ainda.
+        if (newUser && !session) {
+            setSuccessMsg('Conta criada! Verifique seu email para confirmar antes de fazer login. Sua barbearia será configurada no primeiro acesso.');
+            setLoading(false);
+            return;
+        }
+
+        // Se logou direto (demo mode ou sem confirmação de email), cria a barbearia
         const slug = generateSlug(shopName);
-        await createBarbershop(isDemoMode ? 'demo-user-001' : undefined, shopName, slug);
+        const userId = newUser?.id || 'demo-user-001';
+        try {
+            await createBarbershop(userId, shopName, slug);
+        } catch (err) {
+            console.error('Failed to create barbershop silently', err);
+        }
 
         navigate('/dashboard');
     };
@@ -46,17 +61,16 @@ export default function RegisterPage() {
     return (
         <>
             <h2>Criar Conta</h2>
-            {isDemoMode && (
-                <div className="auth-demo-banner">
-                    🎯 <strong>Modo Demo</strong> — Preencha qualquer dado para testar
-                </div>
-            )}
             {error && <div className="auth-error">{error}</div>}
+            {successMsg && <div className="auth-error" style={{ background: 'rgba(52, 211, 153, 0.1)', color: '#34d399', border: '1px solid rgba(52, 211, 153, 0.2)' }}>{successMsg}</div>}
             <form className="auth-form" onSubmit={handleSubmit}>
                 <div className="input-group">
                     <label htmlFor="name">Seu nome</label>
                     <input
                         id="name"
+                        name="auth-name-register"
+                        autoComplete="off"
+                        spellCheck="false"
                         className="input"
                         type="text"
                         placeholder="João Silva"
@@ -69,6 +83,9 @@ export default function RegisterPage() {
                     <label htmlFor="shopName">Nome da barbearia</label>
                     <input
                         id="shopName"
+                        name="auth-shopname-register"
+                        autoComplete="off"
+                        spellCheck="false"
                         className="input"
                         type="text"
                         placeholder="Barbearia do João"
@@ -86,6 +103,9 @@ export default function RegisterPage() {
                     <label htmlFor="reg-email">Email</label>
                     <input
                         id="reg-email"
+                        name="auth-email-register"
+                        autoComplete="off"
+                        spellCheck="false"
                         className="input"
                         type="email"
                         placeholder="seu@email.com"
@@ -96,16 +116,42 @@ export default function RegisterPage() {
                 </div>
                 <div className="input-group">
                     <label htmlFor="reg-password">Senha</label>
-                    <input
-                        id="reg-password"
-                        className="input"
-                        type="password"
-                        placeholder="Mínimo 6 caracteres"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        minLength={6}
-                        required
-                    />
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            id="reg-password"
+                            className="input"
+                            style={{ paddingRight: '40px' }}
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="Mínimo 6 caracteres"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            minLength={6}
+                            required
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            style={{
+                                position: 'absolute',
+                                right: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'var(--text-muted)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 0
+                            }}
+                            title={showPassword ? "Ocultar senha" : "Ver senha"}
+                        >
+                            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                                {showPassword ? 'visibility_off' : 'visibility'}
+                            </span>
+                        </button>
+                    </div>
                 </div>
                 <button className="btn btn-primary btn-lg" type="submit" disabled={loading}>
                     {loading ? 'Criando...' : 'Criar minha barbearia'}

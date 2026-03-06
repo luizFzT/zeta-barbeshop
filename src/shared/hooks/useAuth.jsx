@@ -40,19 +40,23 @@ export function AuthProvider({ children }) {
         return () => subscription.unsubscribe();
     }, []);
 
-    // Barber sign up
     const signUp = async (email, password, name) => {
         if (isDemoMode) {
             const newUser = { ...DEMO_BARBER, email, user_metadata: { name, role: 'barber' } };
             setUser(newUser);
-            return { error: null };
+            return { error: null, user: newUser, session: { user: newUser } };
         }
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: { data: { name, role: 'barber' } },
         });
-        return { error };
+
+        // Only set user if there is an active session (meaning email confirmation is off or already verified)
+        if (!error && data?.session) {
+            setUser(data.user);
+        }
+        return { error, user: data?.user, session: data?.session };
     };
 
     // Barber sign in
@@ -71,9 +75,14 @@ export function AuthProvider({ children }) {
             setUser(DEMO_CLIENT);
             return { error: null, user: DEMO_CLIENT };
         }
+
+        // Remove any hashes from current URL to prevent ##access_token bug
+        const returnUrl = window.location.origin + window.location.pathname;
+
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
+                redirectTo: returnUrl,
                 queryParams: {
                     access_type: 'offline',
                     prompt: 'consent',

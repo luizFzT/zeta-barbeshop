@@ -24,5 +24,12 @@ export default function ProtectedRoute({ children }) {
         return <Navigate to="/auth/login" replace />;
     }
 
+    // Role-based access control: Only barbers can access the dashboard.
+    // If a client tries to access it, redirect them to the home page.
+    const isBarber = user?.user_metadata?.role === 'barber';
+    if (!isBarber) {
+        return <Navigate to="/" replace />;
+    }
+
     return children;
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../shared/hooks/useAuth';
 import { useBarbershop } from '../shared/hooks/useBarbershop';
 import { useTheme } from '../shared/hooks/useTheme';
@@ -36,7 +36,7 @@ function requestNotifPermission() {
 
 export default function ClientQueuePage() {
     const { slug } = useParams();
-    const { user, signInWithGoogle } = useAuth();
+    const { user, signInWithGoogle, signOut } = useAuth();
     const {
         barbershop,
         queue,
@@ -49,9 +49,11 @@ export default function ClientQueuePage() {
         confirmPresence,
         expireEntry,
         sendFallbackWhatsApp,
+        removeFromQueue,
     } = useBarbershop();
     const { theme, toggleTheme } = useTheme();
 
+    const isOwner = user?.id === barbershop?.owner_id;
     const [joinedQueue, setJoinedQueue] = useState(false);
     const [isJoining, setIsJoining] = useState(false);
     const [myPosition, setMyPosition] = useState(null);
@@ -87,6 +89,40 @@ export default function ClientQueuePage() {
         load();
     }, [slug, fetchBySlug]);
 
+    // Auto-resume queue position if logged in user is already in the queue
+    useEffect(() => {
+        if (user && queue.length > 0 && !myEntryId) {
+            const existingEntry = queue.find(e => e.user_id === user.id);
+            if (existingEntry) {
+                setMyEntryId(existingEntry.id);
+                setMyPosition(existingEntry.position);
+                setJoinedQueue(true);
+            }
+        }
+    }, [user, queue, myEntryId]);
+
+    // Auto-resume for GUEST users via localStorage
+    useEffect(() => {
+        if (user || myEntryId || !barbershop) return; // skip if logged in or already resumed
+        try {
+            const saved = localStorage.getItem('zeta-guest-queue');
+            if (!saved) return;
+            const session = JSON.parse(saved);
+            if (session.barbershop_id !== barbershop.id) return; // different shop
+            // Check if the entry still exists in the active queue
+            const existingEntry = queue.find(e => e.id === session.entry_id && e.status === 'waiting');
+            if (existingEntry) {
+                setMyEntryId(existingEntry.id);
+                setMyPosition(existingEntry.position);
+                setJoinedQueue(true);
+                setGuestName(existingEntry.customer_name);
+            } else {
+                // Entry no longer active, clear the stale session
+                localStorage.removeItem('zeta-guest-queue');
+            }
+        } catch { /* ignore */ }
+    }, [user, myEntryId, barbershop, queue]);
+
     useEffect(() => {
         if (barbershop?.id) {
             const unsub = subscribeRealtime(barbershop.id);
@@ -98,11 +134,9 @@ export default function ClientQueuePage() {
     useEffect(() => {
         if (!barbershop) return;
 
-        const baseMinutes = barbershop.wait_time_minutes || 0;
         const peopleAhead = myPosition ? queue.slice(0, myPosition - 1) : queue;
-        // Injecting a 3-minute invisible buffer per person for physical transition/cleaning
-        const sumDurationAhead = peopleAhead.reduce((acc, curr) => acc + (curr.total_duration || 25) + 3, 0);
-        const totalMinutes = baseMinutes + sumDurationAhead;
+        // Sum of actual durations + 3-minute buffer per person for transition/cleaning
+        const totalMinutes = peopleAhead.reduce((acc, curr) => acc + (curr.total_duration || 25) + 3, 0);
 
         if (!targetTime) {
             const target = Date.now() + totalMinutes * 60000;
@@ -114,17 +148,16 @@ export default function ClientQueuePage() {
             setTargetTime(prev => prev + (diffMinutes * 60000));
             prevTimeRef.current = totalMinutes;
         }
-    }, [barbershop, barbershop?.wait_time_minutes, queue, myPosition, targetTime]);
+    }, [barbershop, queue, myPosition, targetTime]);
 
-    // Derived State for Join Flow: Base Wait + Queue Duration + Selected Services Duration
+    // Derived State for Join Flow: Queue Duration + Selected Services Duration
     const joinFlowEstimatedMinutes = barbershop ? (() => {
-        const baseMinutes = barbershop.wait_time_minutes || 0;
         const queueDuration = queue.reduce((acc, curr) => acc + (curr.total_duration || 25) + 3, 0);
         const selectedServicesDuration = selectedServices.reduce((acc, serviceId) => {
             const service = barbershop.services?.find(s => s.id === serviceId);
             return acc + (service?.duration_minutes || 0);
         }, 0);
-        return baseMinutes + queueDuration + selectedServicesDuration;
+        return queueDuration + selectedServicesDuration;
     })() : 0;
 
     // Real-time countdown timer
@@ -301,7 +334,7 @@ export default function ClientQueuePage() {
             );
             if (entry) {
                 setMyEntryId(entry.id);
-                setMyPosition(queue.length + 1);
+                setMyPosition(entry.position || queue.length + 1);
                 setJoinedQueue(true);
                 setShowServiceSelection(false);
                 setSelectedServices([]);
@@ -313,6 +346,16 @@ export default function ClientQueuePage() {
                 // Register SW and ask for notification permission
                 registerServiceWorker();
                 requestNotifPermission();
+
+                // Save guest session to localStorage (for non-logged visitors)
+                if (!user) {
+                    try {
+                        localStorage.setItem('zeta-guest-queue', JSON.stringify({
+                            barbershop_id: barbershop.id,
+                            entry_id: entry.id,
+                        }));
+                    } catch { /* ignore */ }
+                }
             }
         } finally {
             setIsJoining(false);
@@ -479,12 +522,35 @@ export default function ClientQueuePage() {
 
                                 {/* Position Details & Queue Timeline */}
                                 <div className="card card-glass" style={{ marginBottom: 'var(--space-5)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-2)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
                                         <h3 style={{ fontSize: '16px', fontWeight: '700' }}>Sua Posição na Fila</h3>
                                         <div style={{ background: 'var(--bg-secondary)', padding: '4px 12px', borderRadius: '20px', fontSize: '14px', fontWeight: '800', color: 'var(--accent)' }}>
                                             {myPosition}º
                                         </div>
                                     </div>
+
+                                    {/* Prominent Countdown Timer - Styled to match the circular/neon app design */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: 'var(--space-6) 0' }}>
+                                        <div style={{
+                                            width: '180px', height: '180px', borderRadius: '50%',
+                                            background: 'var(--bg-secondary)',
+                                            border: '2px solid var(--accent)',
+                                            boxShadow: '0 0 20px rgba(139, 92, 246, 0.3), inset 0 0 15px rgba(139, 92, 246, 0.1)',
+                                            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                                            position: 'relative'
+                                        }}>
+                                            {/* Glowing ring behind */}
+                                            <div style={{ position: 'absolute', top: '-10px', left: '-10px', right: '-10px', bottom: '-10px', borderRadius: '50%', border: '2px dashed var(--accent)', opacity: 0.3, animation: 'spin 15s linear infinite' }}></div>
+
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '4px', fontWeight: '600' }}>
+                                                Estimativa
+                                            </div>
+                                            <div style={{ fontSize: '42px', fontWeight: '900', fontFamily: 'monospace', lineHeight: '1', color: 'var(--accent)', textShadow: '0 0 10px rgba(139, 92, 246, 0.5)' }}>
+                                                {String(displayTime.m).padStart(2, '0')}<span style={{ opacity: 0.5, animation: 'pulse 2s infinite' }}>:</span>{String(displayTime.s).padStart(2, '0')}
+                                            </div>
+                                        </div>
+                                    </div>
+
 
                                     {/* The New SVG Narrative: Journey of Waiting */}
                                     <div className="py-4 my-2 opacity-90 relative z-10">
@@ -566,13 +632,34 @@ export default function ClientQueuePage() {
                                 )}
 
                                 {/* Cancel / Footer Actions */}
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)', marginBottom: 'var(--space-6)' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)', marginBottom: 'var(--space-4)' }}>
                                     <button className="btn btn-secondary" onClick={() => setShowShareModal(true)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                                         <span className="material-symbols-outlined">share</span> Compartilhar
                                     </button>
-                                    <button className="btn btn-secondary" onClick={() => { if (window.confirm('Tem certeza que deseja sair da fila?')) setJoinedQueue(false); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#f87171' }}>
+                                    <button className="btn btn-secondary" onClick={async () => {
+                                        if (myEntryId) {
+                                            await removeFromQueue(myEntryId);
+                                        }
+                                        setJoinedQueue(false);
+                                        setMyEntryId(null);
+                                        setMyPosition(null);
+                                        // Clear guest session from localStorage
+                                        try { localStorage.removeItem('zeta-guest-queue'); } catch { /* ignore */ }
+                                    }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#f87171' }}>
                                         <span className="material-symbols-outlined">logout</span> Sair da fila
                                     </button>
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: 'var(--space-6)' }}>
+                                    {isOwner && (
+                                        <Link to="/dashboard" className="btn btn-ghost" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                            <span className="material-symbols-outlined">dashboard</span> Voltar ao Painel
+                                        </Link>
+                                    )}
+                                    {user && (
+                                        <button className="btn btn-ghost" onClick={signOut} style={{ flex: isOwner ? 1 : '1 1 100%', color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                            <span className="material-symbols-outlined">close</span> Sair da Conta
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ) : (
@@ -755,9 +842,19 @@ export default function ClientQueuePage() {
                                                 </div>
                                                 <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Olá, {user.user_metadata?.name || user.email.split('@')[0]}!</h3>
                                                 <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: 'var(--space-4)' }}>Você está logado. Clique abaixo para entrar na fila agrora.</p>
-                                                <button className="btn btn-primary btn-block" onClick={handleJoinQueue} style={{ padding: '16px', fontSize: '16px' }}>
+                                                <button className="btn btn-primary btn-block" onClick={handleJoinQueue} style={{ padding: '16px', fontSize: '16px', marginBottom: '12px' }}>
                                                     Entrar na Fila
                                                 </button>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    {isOwner && (
+                                                        <Link to="/dashboard" className="btn btn-secondary" style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                            Painel
+                                                        </Link>
+                                                    )}
+                                                    <button className="btn btn-ghost" onClick={signOut} style={{ flex: isOwner ? 1 : '1 1 100%', color: '#f87171' }}>
+                                                        Sair da Conta
+                                                    </button>
+                                                </div>
                                             </div>
                                         ) : (
                                             <div>

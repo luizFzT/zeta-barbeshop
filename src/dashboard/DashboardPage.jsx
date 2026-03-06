@@ -25,6 +25,7 @@ export default function DashboardPage() {
         stats,
         financialData,
         fetchOwnerBarbershop,
+        createBarbershop,
         toggleOpen,
         updateWaitTime,
         resetWaitTime,
@@ -65,6 +66,9 @@ export default function DashboardPage() {
                 description: barbershop.description || '',
                 phone: barbershop.phone || '',
                 address: barbershop.address || '',
+                avatar_url: barbershop.avatar_url || '',
+                barber_name: barbershop.barber_name || '',
+                barber_avatar_url: barbershop.barber_avatar_url || '',
                 loyalty_target: barbershop.loyalty_target || 10,
                 tolerance_minutes: barbershop.tolerance_minutes ?? 5,
                 confirmation_window: barbershop.confirmation_window ?? 10,
@@ -119,14 +123,11 @@ export default function DashboardPage() {
 
     if (!barbershop) {
         return (
-            <div className="container container-md">
-                <div className="card" style={{ textAlign: 'center', padding: 'var(--space-12)' }}>
-                    <h2>Nenhuma barbearia encontrada</h2>
-                    <p style={{ color: 'var(--text-secondary)', marginTop: 'var(--space-2)' }}>
-                        Você precisa criar uma barbearia primeiro.
-                    </p>
-                </div>
-            </div>
+            <BarbershopOnboarding
+                createBarbershop={createBarbershop}
+                user={user}
+                fetchOwnerBarbershop={fetchOwnerBarbershop}
+            />
         );
     }
 
@@ -256,6 +257,62 @@ export default function DashboardPage() {
                     })}
                 </div>
             </nav>
+        </div>
+    );
+}
+
+/* ===== ONBOARDING SECTION ===== */
+function BarbershopOnboarding({ createBarbershop, user, fetchOwnerBarbershop }) {
+    const [name, setName] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const generateSlug = (n) => {
+        return n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        const slug = generateSlug(name);
+        await createBarbershop(user?.id, name, slug);
+        await fetchOwnerBarbershop(user?.id);
+        setLoading(false);
+    };
+
+    return (
+        <div className="container container-md" style={{ marginTop: 'var(--space-8)' }}>
+            <div className="card animate-fade-in" style={{ padding: 'var(--space-8)' }}>
+                <div style={{ textAlign: 'center', marginBottom: 'var(--space-6)' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--accent)', marginBottom: 'var(--space-4)' }}>storefront</span>
+                    <h2>Bem-vindo ao Zeta Barbershop</h2>
+                    <p style={{ color: 'var(--text-secondary)', marginTop: 'var(--space-2)' }}>
+                        Para começar a gerenciar sua fila, você precisa criar o seu Espaço (Barbearia).
+                    </p>
+                </div>
+
+                <form className="auth-form" onSubmit={handleSubmit}>
+                    <div className="input-group">
+                        <label htmlFor="onboardShopName">Nome da Barbearia</label>
+                        <input
+                            id="onboardShopName"
+                            className="input"
+                            type="text"
+                            placeholder="Ex: Barbearia do João"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                        />
+                        {name && (
+                            <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
+                                URL do cliente: <strong style={{ color: 'var(--accent)' }}>/view/{generateSlug(name)}</strong>
+                            </span>
+                        )}
+                    </div>
+                    <button className="btn btn-primary btn-lg" type="submit" disabled={loading} style={{ width: '100%', marginTop: 'var(--space-4)' }}>
+                        {loading ? 'Criando...' : 'Criar minha Barbearia'}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 }

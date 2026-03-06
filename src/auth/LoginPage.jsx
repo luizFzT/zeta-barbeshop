@@ -5,6 +5,7 @@ import { useAuth } from '../shared/hooks/useAuth';
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const { signIn, isDemoMode } = useAuth();
@@ -40,6 +41,9 @@ export default function LoginPage() {
                     <label htmlFor="email">Email</label>
                     <input
                         id="email"
+                        name="auth-email-login"
+                        autoComplete="off"
+                        spellCheck="false"
                         className="input"
                         type="email"
                         placeholder="seu@email.com"
@@ -50,15 +54,41 @@ export default function LoginPage() {
                 </div>
                 <div className="input-group">
                     <label htmlFor="password">Senha</label>
-                    <input
-                        id="password"
-                        className="input"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                    />
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            id="password"
+                            className="input"
+                            style={{ paddingRight: '40px' }}
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="••••••••"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            style={{
+                                position: 'absolute',
+                                right: '12px',
+                                top: '50%',
+                                transform: 'translateY(-50%)',
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'var(--text-muted)',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                padding: 0
+                            }}
+                            title={showPassword ? "Ocultar senha" : "Ver senha"}
+                        >
+                            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>
+                                {showPassword ? 'visibility_off' : 'visibility'}
+                            </span>
+                        </button>
+                    </div>
                 </div>
                 <button className="btn btn-primary btn-lg" type="submit" disabled={loading}>
                     {loading ? 'Entrando...' : 'Entrar'}

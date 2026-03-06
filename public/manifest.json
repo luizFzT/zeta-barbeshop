@@ -1,15 +1,25 @@
 {
     "short_name": "Zeta",
     "name": "Zeta Barbershop",
+    "description": "Gerencie a fila da sua barbearia em tempo real.",
     "icons": [
         {
             "src": "logo-cyberpunk-image.png",
             "type": "image/png",
-            "sizes": "192x192 512x512"
+            "sizes": "192x192",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "logo-cyberpunk-image.png",
+            "type": "image/png",
+            "sizes": "512x512",
+            "purpose": "any maskable"
         }
     ],
-    "start_url": ".",
+    "start_url": "/app",
+    "scope": "/",
     "display": "standalone",
+    "orientation": "portrait",
     "theme_color": "#0a0a0f",
     "background_color": "#0a0a0f"
 }

@@ -224,7 +224,7 @@ export function BarbershopProvider({ children }) {
     async function fetchQueue(barbershopId) {
         if (isDemoMode) return;
         const { data } = await supabase
-            .from('queue')
+            .from('queue_entries')
             .select('*')
             .eq('barbershop_id', barbershopId)
             .eq('status', 'waiting')
@@ -270,7 +270,7 @@ export function BarbershopProvider({ children }) {
 
         const { data, error } = await supabase
             .from('barbershops')
-            .select('*')
+            .select('*, services(*)')
             .eq('owner_id', userId)
             .single();
 
@@ -300,7 +300,7 @@ export function BarbershopProvider({ children }) {
 
         const { data, error } = await supabase
             .from('barbershops')
-            .select('*')
+            .select('*, services(*)')
             .eq('slug', slug)
             .single();
 
@@ -375,6 +375,26 @@ export function BarbershopProvider({ children }) {
 
     // Queue management
     const addToQueue = async (customerName, userId = null, email = null, selectedServicesIds = []) => {
+        // --- DUPLICATE PREVENTION: Block if this user or guest is already waiting ---
+        if (userId) {
+            const alreadyInQueue = queue.find(e => e.user_id === userId && e.status === 'waiting');
+            if (alreadyInQueue) {
+                console.warn('[addToQueue] User already in queue, blocking duplicate entry.');
+                return null;
+            }
+        } else {
+            // Guest duplicate check (same exact name, no user_id)
+            const guestAlreadyInQueue = queue.find(e =>
+                !e.user_id &&
+                e.customer_name.trim().toLowerCase() === customerName.trim().toLowerCase() &&
+                e.status === 'waiting'
+            );
+            if (guestAlreadyInQueue) {
+                console.warn('[addToQueue] Guest name already in queue, blocking duplicate entry.');
+                return null;
+            }
+        }
+
         let totalDuration = 0;
         if (selectedServicesIds.length > 0 && barbershop?.services) {
             totalDuration = selectedServicesIds.reduce((sum, id) => {
@@ -384,15 +404,19 @@ export function BarbershopProvider({ children }) {
         }
         if (totalDuration === 0) totalDuration = barbershop?.wait_time_minutes || 25; // fallback
 
+        // --- POSITION FIX: Use max existing position + 1 instead of queue.length + 1 ---
+        const maxPosition = queue.reduce((max, e) => Math.max(max, e.position), 0);
+        const nextPosition = maxPosition + 1;
+
         const newEntry = {
             id: isDemoMode ? `demo-${Date.now()}` : undefined,
             barbershop_id: barbershop.id,
             customer_name: customerName,
             user_id: userId,
             email: email,
-            position: queue.length + 1,
+            position: nextPosition,
             status: 'waiting',
-            confirmation_status: 'none', // none | pending | confirmed | expired
+            confirmation_status: 'none',
             confirmation_deadline: null,
             selected_services: selectedServicesIds,
             total_duration: totalDuration,
@@ -405,10 +429,8 @@ export function BarbershopProvider({ children }) {
                 newQ = [...prev, newEntry];
                 return newQ;
             });
-            // Schedule the save for after the render cycle (or do it right away outside the updater)
             saveDemoQueue([...queue, newEntry]);
 
-            // Update loyalty for this client
             if (userId) {
                 setLoyalty(prev => {
                     const existing = prev.find(l => l.user_id === userId);
@@ -421,7 +443,6 @@ export function BarbershopProvider({ children }) {
                             free_cuts_used: 0,
                             last_visit: new Date().toISOString(),
                         }];
-                        // We schedule the side effect with a timeout or useEffect
                         setTimeout(() => saveDemoLoyalty(newLoyalty), 0);
                         return newLoyalty;
                     }
@@ -431,13 +452,42 @@ export function BarbershopProvider({ children }) {
             return newEntry;
         }
 
+        // --- SUPABASE: Double-check on server side too ---
+        if (userId) {
+            const { data: existing } = await supabase
+                .from('queue_entries')
+                .select('id')
+                .eq('barbershop_id', barbershop.id)
+                .eq('user_id', userId)
+                .eq('status', 'waiting')
+                .maybeSingle();
+            if (existing) {
+                console.warn('[addToQueue] Server-side duplicate detected (user), blocking.');
+                return null;
+            }
+        } else {
+            const { data: existingGuest } = await supabase
+                .from('queue_entries')
+                .select('id')
+                .eq('barbershop_id', barbershop.id)
+                .is('user_id', null)
+                .ilike('customer_name', customerName.trim())
+                .eq('status', 'waiting')
+                .maybeSingle();
+            if (existingGuest) {
+                console.warn('[addToQueue] Server-side duplicate detected (guest), blocking.');
+                return null;
+            }
+        }
+
         const { data, error } = await supabase
-            .from('queue')
+            .from('queue_entries')
             .insert([{
                 barbershop_id: barbershop.id,
                 customer_name: customerName,
                 user_id: userId,
-                position: queue.length + 1,
+                email: email,
+                position: nextPosition,
                 status: 'waiting',
                 selected_services: selectedServicesIds,
                 total_duration: totalDuration,
@@ -498,7 +548,7 @@ export function BarbershopProvider({ children }) {
         }
 
         await supabase
-            .from('queue')
+            .from('queue_entries')
             .update({ status: 'called' })
             .eq('id', next.id);
 
@@ -506,7 +556,7 @@ export function BarbershopProvider({ children }) {
         const remaining = queue.slice(1);
         for (let i = 0; i < remaining.length; i++) {
             await supabase
-                .from('queue')
+                .from('queue_entries')
                 .update({ position: i + 1 })
                 .eq('id', remaining[i].id);
         }
@@ -555,7 +605,33 @@ export function BarbershopProvider({ children }) {
             setTimeout(() => saveDemoQueue(newQ), 0);
             return;
         }
-        await supabase.from('queue').delete().eq('id', entryId);
+
+        // Delete the entry
+        const { error } = await supabase.from('queue_entries').delete().eq('id', entryId);
+        if (error) {
+            console.error('[removeFromQueue] Failed to delete entry:', error.message);
+            return;
+        }
+
+        // Renumber remaining entries sequentially to avoid gaps
+        const { data: remaining } = await supabase
+            .from('queue_entries')
+            .select('id, position')
+            .eq('barbershop_id', barbershop.id)
+            .eq('status', 'waiting')
+            .order('position', { ascending: true });
+
+        if (remaining) {
+            for (let i = 0; i < remaining.length; i++) {
+                if (remaining[i].position !== i + 1) {
+                    await supabase
+                        .from('queue_entries')
+                        .update({ position: i + 1 })
+                        .eq('id', remaining[i].id);
+                }
+            }
+        }
+
         await fetchQueue(barbershop.id);
     };
 
@@ -675,14 +751,67 @@ export function BarbershopProvider({ children }) {
 
     // Update barbershop settings
     const updateBarbershopSettings = async (updates) => {
-        setBarbershop(prev => ({ ...prev, ...updates }));
         if (isDemoMode) {
+            setBarbershop(prev => ({ ...prev, ...updates }));
             saveDemoSettings(updates);
-        } else {
-            await supabase
+            return;
+        }
+
+        // Separate services from other barbershop fields
+        const { services: newServices, slug, ...barbershopFields } = updates;
+
+        // 1. Update barbershop fields (non-services)
+        if (Object.keys(barbershopFields).length > 0) {
+            console.log('[updateSettings] Updating barbershop fields:', barbershopFields);
+            const { error: updateError } = await supabase
                 .from('barbershops')
-                .update({ ...updates, updated_at: new Date().toISOString() })
+                .update({ ...barbershopFields, updated_at: new Date().toISOString() })
                 .eq('id', barbershop.id);
+            if (updateError) {
+                console.error('[updateSettings] Error updating barbershop:', updateError);
+            } else {
+                console.log('[updateSettings] Barbershop fields updated successfully');
+            }
+        }
+
+        // 2. Sync services table if services were included
+        if (newServices !== undefined) {
+            // Delete all existing services for this barbershop
+            const { error: deleteError } = await supabase
+                .from('services')
+                .delete()
+                .eq('barbershop_id', barbershop.id);
+            if (deleteError) console.error('[updateSettings] Error deleting services:', deleteError);
+
+            // Insert the new/updated services
+            if (newServices.length > 0) {
+                const servicesToInsert = newServices.map(s => ({
+                    barbershop_id: barbershop.id,
+                    name: s.name,
+                    duration_minutes: parseInt(s.duration_minutes) || 30,
+                    price: parseFloat(s.price) || 0,
+                }));
+                console.log('[updateSettings] Inserting services:', servicesToInsert);
+                const { error: insertError } = await supabase
+                    .from('services')
+                    .insert(servicesToInsert);
+                if (insertError) console.error('[updateSettings] Error inserting services:', insertError);
+            }
+        }
+
+        // 3. Re-fetch the full barbershop with services to get real UUIDs
+        const { data, error: fetchError } = await supabase
+            .from('barbershops')
+            .select('*, services(*)')
+            .eq('id', barbershop.id)
+            .single();
+
+        if (fetchError) {
+            console.error('[updateSettings] Error re-fetching barbershop:', fetchError);
+        }
+        if (data) {
+            console.log('[updateSettings] Re-fetched barbershop:', data);
+            setBarbershop(data);
         }
     };
 
@@ -719,7 +848,7 @@ export function BarbershopProvider({ children }) {
                 }
             )
             .on('postgres_changes',
-                { event: '*', schema: 'public', table: 'queue', filter: `barbershop_id=eq.${barbershopId}` },
+                { event: '*', schema: 'public', table: 'queue_entries', filter: `barbershop_id=eq.${barbershopId}` },
                 () => {
                     fetchQueue(barbershopId);
                 }
