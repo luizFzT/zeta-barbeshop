@@ -34,3 +34,24 @@ self.addEventListener('notificationclick', (event) => {
         })
     );
 });
+
+// VERY IMPORTANT: A fetch handler is required for the browser to consider this a valid PWA!
+// This simple network-first strategy ensures PWA installability requirements are met.
+self.addEventListener('fetch', (event) => {
+    // Only handle GET requests or let the browser do its thing
+    if (event.request.method !== 'GET') return;
+
+    event.respondWith(
+        fetch(event.request).catch(async () => {
+            // Fallback to cache if offline
+            const cache = await caches.open('zeta-offline-cache');
+            const cachedResponse = await cache.match(event.request);
+            if (cachedResponse) return cachedResponse;
+            // If requesting a page and offline, try returning root index.html
+            if (event.request.mode === 'navigate') {
+                return cache.match('/index.html');
+            }
+            return new Response('Network error', { status: 408, headers: { 'Content-Type': 'text/plain' } });
+        })
+    );
+});

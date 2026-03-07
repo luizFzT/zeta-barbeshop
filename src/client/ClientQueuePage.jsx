@@ -62,10 +62,10 @@ export default function ClientQueuePage() {
     const [showNotification, setShowNotification] = useState(false);
     const [notFound, setNotFound] = useState(false);
     const [guestName, setGuestName] = useState('');
-    const prevTimeRef = useRef(null);
 
     // Share Modal State
     const [showShareModal, setShowShareModal] = useState(false);
+    const [showAppBanner, setShowAppBanner] = useState(false);
 
     // Service selection
     const [showServiceSelection, setShowServiceSelection] = useState(false);
@@ -88,6 +88,14 @@ export default function ClientQueuePage() {
             if (!data) setNotFound(true);
         };
         load();
+
+        // Check if app is not installed (standalone) and user hasn't dismissed the banner
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        const dismissed = localStorage.getItem('zeta_dismiss_install_banner');
+        if (!isStandalone && !dismissed) {
+            // Delay the banner slightly so it doesn't pop up immediately
+            setTimeout(() => setShowAppBanner(true), 3000);
+        }
     }, [slug, fetchBySlug]);
 
     // Auto-resume queue position if logged in user is already in the queue
@@ -131,53 +139,51 @@ export default function ClientQueuePage() {
         }
     }, [barbershop?.id, subscribeRealtime]);
 
-    // Calculate exact wait time target
+    // Calculate precise target time using absolute epochs based on the active service update
     useEffect(() => {
         if (!barbershop) return;
 
-        // The person currently in the chair is represented by barbershop.wait_time_minutes
-        const chairTime = barbershop.wait_time_minutes || 0;
+        const configuredMinutes = barbershop.wait_time_minutes || 0;
+        const updatedMs = barbershop.updated_at ? new Date(barbershop.updated_at).getTime() : Date.now();
+        const chairEndEpoch = updatedMs + (configuredMinutes * 60000);
+
+        // Prevent negative time on chair wait if it's overdue
+        const effectiveChairEnd = Math.max(Date.now(), chairEndEpoch);
 
         if (myPosition === 1) {
             // Se sou o 1º da fila, meu tempo não depende mais de quem está na frente.
-            // Depende apenas se a minha tolerância já começou a contar ou do Atraso Global.
             if (toleranceEnd) {
                 setTargetTime(toleranceEnd); // Seguir a regressiva da tolerância
-                prevTimeRef.current = null;
             } else {
-                // Ainda aguardando o barbeiro confirmar/chamar o próximo, fico com o tempo da cadeira
-                const target = Date.now() + chairTime * 60000;
-                setTargetTime(target);
-                prevTimeRef.current = chairTime;
+                setTargetTime(effectiveChairEnd);
             }
             return;
         }
 
         const peopleAhead = myPosition ? queue.slice(0, myPosition - 1) : queue;
-        // Sum of actual durations + 3-minute buffer per person + Active Chair Time
+        // Sum of actual durations + 3-minute transition buffer per person
         const queueMinutes = peopleAhead.reduce((acc, curr) => acc + (curr.total_duration || 25) + 3, 0);
-        const totalMinutes = queueMinutes + chairTime;
 
-        if (!targetTime) {
-            const target = Date.now() + totalMinutes * 60000;
-            setTargetTime(target);
-            prevTimeRef.current = totalMinutes;
-        } else if (prevTimeRef.current !== null && totalMinutes !== prevTimeRef.current) {
-            // Only update target if the calculated total changes due to queue moving or barber adding delay
-            const diffMinutes = totalMinutes - prevTimeRef.current;
-            setTargetTime(prev => prev + (diffMinutes * 60000));
-            prevTimeRef.current = totalMinutes;
-        }
-    }, [barbershop, queue, myPosition, targetTime, toleranceEnd]);
+        // Target is the absolute timestamp when everything ahead finishes
+        const absoluteTarget = effectiveChairEnd + (queueMinutes * 60000);
+        setTargetTime(absoluteTarget);
+
+    }, [barbershop, queue, myPosition, toleranceEnd]);
 
     // Derived State for Join Flow: Queue Duration + Selected Services Duration
     const joinFlowEstimatedMinutes = barbershop ? (() => {
-        const chairTime = barbershop.wait_time_minutes || 0;
+        const configuredMinutes = barbershop.wait_time_minutes || 0;
+        const updatedMs = barbershop.updated_at ? new Date(barbershop.updated_at).getTime() : Date.now();
+        // Calculate exact remaining minutes for the active chair
+        const msRemaining = (configuredMinutes * 60000) - (Date.now() - updatedMs);
+        const chairTime = Math.max(0, msRemaining / 60000);
+
         const queueDuration = queue.reduce((acc, curr) => acc + (curr.total_duration || 25) + 3, 0);
         const selectedServicesDuration = selectedServices.reduce((acc, serviceId) => {
             const service = barbershop.services?.find(s => s.id === serviceId);
             return acc + (service?.duration_minutes || 0);
         }, 0);
+
         return chairTime + queueDuration + selectedServicesDuration;
     })() : 0;
 
@@ -1014,6 +1020,27 @@ export default function ClientQueuePage() {
                                 Copiar Link da Fila
                             </button>
                         </div>
+                    </div>
+                )
+            }
+
+            {/* App Install Banner */}
+            {
+                showAppBanner && (
+                    <div className="cq-app-banner animate-fade-in" style={{ position: 'fixed', bottom: '24px', left: '16px', right: '16px', zIndex: 900, background: 'var(--bg-glass)', backdropFilter: 'blur(12px)', border: '1px solid var(--accent)', borderRadius: 'var(--radius-lg)', padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.6)' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '8px', overflow: 'hidden', flexShrink: 0, border: '1px solid #333' }}>
+                            <img src="/logo-pwa-app.jpg" alt="Zeta" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '14px', fontWeight: '700', color: 'var(--text-primary)' }}>Instale o App Zeta</div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Adicione à tela inicial para acesso VIP.</div>
+                        </div>
+                        <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '12px', fontWeight: 'bold' }} onClick={() => { setShowShareModal(true); setShowAppBanner(false); }}>
+                            Instalar
+                        </button>
+                        <button className="btn btn-ghost btn-icon" style={{ padding: '4px', height: 'auto', minWidth: 'auto', color: 'var(--text-muted)' }} onClick={() => { localStorage.setItem('zeta_dismiss_install_banner', '1'); setShowAppBanner(false); }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: '18px' }}>close</span>
+                        </button>
                     </div>
                 )
             }

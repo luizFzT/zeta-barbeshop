@@ -1,10 +1,11 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, Component } from 'react';
 import { useAuth } from '../shared/hooks/useAuth';
 import { useBarbershop } from '../shared/hooks/useBarbershop';
 import { QRCodeCanvas } from 'qrcode.react';
 import { SVGSoundwaves } from '../core/components/SVGSoundwaves';
 import { SVGMagnetLine } from '../core/components/SVGMagnetLine';
 import { copyToClipboard } from '../shared/utils/clipboard';
+import { supabase } from '../shared/services/supabase';
 import './DashboardPage.css';
 
 const TABS = [
@@ -15,8 +16,37 @@ const TABS = [
     { id: 'settings', label: 'Perfil', icon: 'person' },
 ];
 
-export default function DashboardPage() {
-    const { user } = useAuth();
+class ErrorBoundary extends Component {
+    constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+    componentDidCatch(error, errorInfo) {
+        localStorage.setItem('ZETA_CRASH', error.toString() + '\n' + error.stack + '\n' + errorInfo.componentStack);
+    }
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div style={{ padding: '2rem', color: 'red', background: '#222' }}>
+                    <h1>Application Crash</h1>
+                    <pre>{this.state.error?.toString()}</pre>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
+
+export default function DashboardPageWrapper() {
+    return (
+        <ErrorBoundary>
+            <DashboardPage />
+        </ErrorBoundary>
+    );
+}
+
+function DashboardPage() {
+    const { user, isDemoMode } = useAuth();
     const {
         barbershop,
         queue,
@@ -44,6 +74,12 @@ export default function DashboardPage() {
     const mainRef = useRef(null);
     const [timeAnimation, setTimeAnimation] = useState(false);
     const [calledCustomer, setCalledCustomer] = useState(null);
+    const [activeClient, setActiveClient] = useState(() => {
+        try {
+            const saved = localStorage.getItem('zeta_active_client');
+            return saved ? JSON.parse(saved) : null;
+        } catch { return null; }
+    });
     const [manualName, setManualName] = useState('');
     const [manualServices, setManualServices] = useState([]);
     const [settingsForm, setSettingsForm] = useState({});
@@ -51,15 +87,16 @@ export default function DashboardPage() {
 
     useEffect(() => {
         if (user) fetchOwnerBarbershop(user.id);
-    }, [user]);
+    }, [user, fetchOwnerBarbershop]);
 
     useEffect(() => {
         if (barbershop?.id) {
             const unsub = subscribeRealtime(barbershop.id);
             return unsub;
         }
-    }, [barbershop?.id]);
+    }, [barbershop?.id, subscribeRealtime]);
 
+    // Initialize form with current data
     useEffect(() => {
         if (barbershop) {
             setSettingsForm({
@@ -77,7 +114,6 @@ export default function DashboardPage() {
                 services: barbershop.services || [],
             });
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [barbershop]);
 
     const handleTimeChange = (delta) => {
@@ -89,9 +125,25 @@ export default function DashboardPage() {
     const handleCallNext = async () => {
         const called = await callNext();
         if (called) {
+            let withAvatar = { ...called };
+            if (called.user_id && !isDemoMode) {
+                try {
+                    const { data: profile } = await supabase.from('profiles').select('avatar_url').eq('id', called.user_id).maybeSingle();
+                    if (profile && profile.avatar_url) withAvatar.avatar_url = profile.avatar_url;
+                } catch (e) { console.error('Error fetching avatar', e); }
+            }
+            setActiveClient(withAvatar);
+            localStorage.setItem('zeta_active_client', JSON.stringify(withAvatar));
+
             setCalledCustomer(called.customer_name);
             setTimeout(() => setCalledCustomer(null), 3000);
         }
+    };
+
+    const handleResetWaitTime = async () => {
+        await resetWaitTime();
+        setActiveClient(null);
+        localStorage.removeItem('zeta_active_client');
     };
 
     const handleAddManual = async (e) => {
@@ -165,9 +217,10 @@ export default function DashboardPage() {
                     <QueueSection
                         barbershop={barbershop}
                         queue={queue}
+                        activeClient={activeClient}
                         timeAnimation={timeAnimation}
                         handleTimeChange={handleTimeChange}
-                        resetWaitTime={resetWaitTime}
+                        resetWaitTime={handleResetWaitTime}
                         handleCallNext={handleCallNext}
                         removeFromQueue={removeFromQueue}
                         skipEntry={skipEntry}
@@ -319,9 +372,197 @@ function BarbershopOnboarding({ createBarbershop, user, fetchOwnerBarbershop }) 
     );
 }
 
+/* ===== ACTIVE SERVICE TIMER COMPONENT ===== */
+function ActiveServiceTimer({ barbershop, timeAnimation }) {
+    const [displayTime, setDisplayTime] = useState({ m: 0, s: 0, over: false });
+
+    useEffect(() => {
+        if (!barbershop) return;
+
+        const updateTimer = () => {
+            const configured = barbershop.wait_time_minutes || 0;
+            if (configured === 0) {
+                setDisplayTime({ m: 0, s: 0, over: false });
+                return;
+            }
+
+            const updatedDate = barbershop.updated_at ? new Date(barbershop.updated_at).getTime() : Date.now();
+            const msPassed = Date.now() - updatedDate;
+            const msRemaining = (configured * 60000) - msPassed;
+
+            if (msRemaining <= 0) {
+                setDisplayTime({ m: 0, s: 0, over: true });
+            } else {
+                const MathMax = Math.max(0, msRemaining);
+                const totalSeconds = Math.floor(MathMax / 1000);
+                setDisplayTime({ m: Math.floor(totalSeconds / 60), s: totalSeconds % 60, over: false });
+            }
+        };
+
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        return () => clearInterval(interval);
+    }, [barbershop]);
+
+    return (
+        <span className={`dash-time-val ${timeAnimation ? 'dash-time-animate' : ''}`} style={{ color: displayTime.over ? 'var(--warning)' : 'inherit', minWidth: '45px', display: 'inline-block', textAlign: 'center' }}>
+            {String(displayTime.m).padStart(2, '0')}:{String(displayTime.s).padStart(2, '0')}
+        </span>
+    );
+}
+
+/* ===== ACTIVE CLIENT CANVAS COMPONENT ===== */
+function ActiveClientCanvas({ client, barbershop }) {
+    if (!client || typeof client !== 'object') return null;
+
+    const hasAvatar = typeof client.avatar_url === 'string' && client.avatar_url.trim() !== '';
+    const avatarUrl = hasAvatar ? client.avatar_url : null;
+
+    // Services Badges
+    const clientServicesIds = Array.isArray(client.selected_services) ? client.selected_services : [];
+    const serviceDetails = clientServicesIds.map(sid => barbershop?.services?.find(s => s.id === sid)).filter(Boolean);
+
+    return (
+        <div className="dash-card dash-active-client-canvas" style={{
+            position: 'relative',
+            overflow: 'hidden',
+            marginBottom: 'var(--space-4)',
+            padding: 'var(--space-5)'
+        }}>
+            {/* Minimalist Barber Chair Watermark */}
+            <div style={{
+                position: 'absolute',
+                right: '8%',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                opacity: 0.04,
+                pointerEvents: 'none',
+                zIndex: 0
+            }}>
+                <svg width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
+                    {/* Base */}
+                    <path d="M7 21h10" />
+                    <path d="M12 17v4" />
+                    <path d="M10 17h4" />
+                    {/* Seat */}
+                    <path d="M7 13h10v2a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-2z" />
+                    {/* Backrest */}
+                    <path d="M8 13V9a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4" />
+                    {/* Headrest */}
+                    <path d="M10 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2" />
+                    {/* Armrests */}
+                    <path d="M5 10h14" />
+                    <path d="M5 10v3" />
+                    <path d="M19 10v3" />
+                </svg>
+            </div>
+
+            {/* Subtle Neon Glow Decoration */}
+            <div style={{
+                position: 'absolute',
+                top: '-50px',
+                right: '-50px',
+                width: '150px',
+                height: '150px',
+                background: 'var(--primary)',
+                filter: 'blur(80px)',
+                opacity: '0.15',
+                pointerEvents: 'none'
+            }} />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+                {/* Avatar / Icon Hero */}
+                <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '24px',
+                    background: hasAvatar ? 'transparent' : 'rgba(255, 255, 255, 0.03)',
+                    border: hasAvatar ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    boxShadow: hasAvatar ? '0 8px 16px rgba(0,0,0,0.4)' : 'none',
+                    flexShrink: 0
+                }}>
+                    {hasAvatar ? (
+                        <img src={avatarUrl} alt={client.customer_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                        <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--primary)', opacity: 0.8 }}>
+                            content_cut
+                        </span>
+                    )}
+                </div>
+
+                {/* Information Spatial Block */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', position: 'relative', zIndex: 10 }}>
+                    {/* Tiny visual label */}
+                    <span style={{
+                        fontSize: '10px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '2px',
+                        color: 'var(--primary)',
+                        fontWeight: '600',
+                        opacity: 0.8
+                    }}>
+                        Cadeira Ativa
+                    </span>
+
+                    {/* Hero Typography */}
+                    <h2 style={{
+                        fontSize: '24px',
+                        fontWeight: '800',
+                        letterSpacing: '-0.5px',
+                        color: 'var(--text)',
+                        margin: 0,
+                        lineHeight: 1,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: '200px'
+                    }}>
+                        {client.customer_name}
+                    </h2>
+                </div>
+            </div>
+
+            {/* Chromatic Badges for Services */}
+            {serviceDetails.length > 0 && (
+                <div style={{
+                    display: 'flex',
+                    gap: 'var(--space-2)',
+                    flexWrap: 'wrap',
+                    marginTop: 'var(--space-5)',
+                    position: 'relative',
+                    zIndex: 10
+                }}>
+                    {serviceDetails.map((service, idx) => (
+                        <div key={idx} style={{
+                            padding: '6px 14px',
+                            background: 'rgba(255,255,255, 0.04)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            borderRadius: '100px',
+                            fontSize: '11px',
+                            fontWeight: '500',
+                            letterSpacing: '0.5px',
+                            color: 'var(--text-muted)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px'
+                        }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 8px var(--primary)' }} />
+                            {service.name}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
 /* ===== QUEUE SECTION (Command Center) ===== */
 function QueueSection({
-    barbershop, queue, timeAnimation, handleTimeChange,
+    barbershop, queue, timeAnimation, handleTimeChange, activeClient,
     resetWaitTime, handleCallNext, removeFromQueue, skipEntry,
     manualName, setManualName, handleAddManual,
     manualServices, toggleManualService, history, financialData
@@ -406,12 +647,17 @@ function QueueSection({
                 )}
             </div>
 
+            {/* Active Client Canvas Display */}
+            {activeClient && (
+                <ActiveClientCanvas client={activeClient} barbershop={barbershop} />
+            )}
+
             {/* Time Control Card (Collapsible or subtle) */}
             <div className="dash-card dash-time-control">
                 <div className="dash-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h2 className="dash-card-title" style={{ fontSize: '13px' }}>Atraso Geral (+/-)</h2>
+                    <h2 className="dash-card-title" style={{ fontSize: '13px' }}>Serviço em Andamento</h2>
                     <div className="dash-time-tag">
-                        <span className={`dash-time-val ${timeAnimation ? 'dash-time-animate' : ''}`}>{barbershop.wait_time_minutes}</span> min
+                        <ActiveServiceTimer barbershop={barbershop} timeAnimation={timeAnimation} />
                     </div>
                 </div>
                 <div className="dash-time-controls" style={{ marginTop: 'var(--space-3)' }}>
@@ -1192,7 +1438,7 @@ function FinanceSection({ financialData, barbershop, updateBarbershopSettings, r
                                         <span className="fin-table-count">{item.count}</span>
                                         <span className="fin-table-revenue">R$ {item.revenue.toFixed(0)}</span>
                                         <div className="fin-table-price">
-                                            {editingServiceId === item.id ? (
+                                            {editingServiceId !== null && editingServiceId === item.id ? (
                                                 <div className="fin-edit-price">
                                                     <input
                                                         className="input fin-price-input"

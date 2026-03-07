@@ -17,7 +17,9 @@ const DEMO_BARBERSHOP = {
     slug: 'zeta-barbershop',
     is_open: true,
     wait_time_minutes: 0, // Now we rely more on the exact wait queue
+    updated_at: new Date().toISOString(),
     description: 'O melhor corte da cidade!',
+
     phone: '(11) 99999-9999',
     address: 'Rua Demo, 123',
     avatar_url: null,
@@ -97,7 +99,7 @@ function getDemoQueue() {
     try { const saved = localStorage.getItem(DEMO_QUEUE_KEY); return saved ? JSON.parse(saved) : DEMO_QUEUE; } catch { return [...DEMO_QUEUE]; }
 }
 function saveDemoQueue(q) {
-    try { localStorage.setItem(DEMO_QUEUE_KEY, JSON.stringify(q)); window.dispatchEvent(new Event('storage-local')); } catch { }
+    try { localStorage.setItem(DEMO_QUEUE_KEY, JSON.stringify(q)); window.dispatchEvent(new Event('storage-local')); } catch (e) { console.error('Local storage error', e); }
 }
 
 const DEMO_LOYALTY_KEY = 'zeta-demo-loyalty';
@@ -105,7 +107,7 @@ function getDemoLoyalty() {
     try { const saved = localStorage.getItem(DEMO_LOYALTY_KEY); return saved ? JSON.parse(saved) : DEMO_LOYALTY; } catch { return [...DEMO_LOYALTY]; }
 }
 function saveDemoLoyalty(l) {
-    try { localStorage.setItem(DEMO_LOYALTY_KEY, JSON.stringify(l)); window.dispatchEvent(new Event('storage-local')); } catch { }
+    try { localStorage.setItem(DEMO_LOYALTY_KEY, JSON.stringify(l)); window.dispatchEvent(new Event('storage-local')); } catch (e) { console.error('Local storage error', e); }
 }
 
 const DEMO_HISTORY_KEY = 'zeta-demo-history';
@@ -113,7 +115,7 @@ function getDemoHistory() {
     try { const saved = localStorage.getItem(DEMO_HISTORY_KEY); return saved ? JSON.parse(saved) : DEMO_HISTORY; } catch { return [...DEMO_HISTORY]; }
 }
 function saveDemoHistory(h) {
-    try { localStorage.setItem(DEMO_HISTORY_KEY, JSON.stringify(h)); window.dispatchEvent(new Event('storage-local')); } catch { }
+    try { localStorage.setItem(DEMO_HISTORY_KEY, JSON.stringify(h)); window.dispatchEvent(new Event('storage-local')); } catch (e) { console.error('Local storage error', e); }
 }
 
 // Financial demo data — simulated weekly service records
@@ -172,7 +174,7 @@ function getDemoFinancial(services) {
     return data;
 }
 function saveDemoFinancial(f) {
-    try { localStorage.setItem(DEMO_FINANCIAL_KEY, JSON.stringify(f)); window.dispatchEvent(new Event('storage-local')); } catch { }
+    try { localStorage.setItem(DEMO_FINANCIAL_KEY, JSON.stringify(f)); window.dispatchEvent(new Event('storage-local')); } catch (e) { console.error('Local storage error', e); }
 }
 function regenerateDemoFinancial(services) {
     const data = generateDemoFinancial(services);
@@ -208,7 +210,12 @@ export function BarbershopProvider({ children }) {
             if (rawLoyalty) setLoyalty(JSON.parse(rawLoyalty));
 
             const rawHistory = localStorage.getItem('zeta_demo_history');
-            if (rawHistory) setHistory(JSON.parse(rawHistory));
+            if (rawHistory) {
+                const parsed = JSON.parse(rawHistory);
+                // Remove perfect duplicates (bug fix leftover cleanup)
+                const uniqueLogs = parsed.filter((v, i, a) => a.findIndex(t => (t.id === v.id || (t.customer_name === v.customer_name && t.served_at === v.served_at))) === i);
+                setHistory(uniqueLogs);
+            }
         };
         window.addEventListener('storage', handleStorage);
         window.addEventListener('storage-local', handleStorage);
@@ -294,7 +301,7 @@ export function BarbershopProvider({ children }) {
                 weeklyData: weeklyData,
             }));
         }
-    }, [isDemoMode]);
+    }, []);
 
     // Fetch barbershop for owner
     const fetchOwnerBarbershop = useCallback(async (userId) => {
@@ -380,7 +387,11 @@ export function BarbershopProvider({ children }) {
     const updateWaitTime = async (delta) => {
         if (isDemoMode) {
             setBarbershop(prev => {
-                const updated = { ...prev, wait_time_minutes: Math.max(0, prev.wait_time_minutes + delta) };
+                const updated = {
+                    ...prev,
+                    wait_time_minutes: Math.max(0, prev.wait_time_minutes + delta),
+                    updated_at: new Date().toISOString()
+                };
                 localStorage.setItem('zeta_demo_shop', JSON.stringify(updated));
                 window.dispatchEvent(new Event('storage-local'));
                 return updated;
@@ -399,7 +410,7 @@ export function BarbershopProvider({ children }) {
     const resetWaitTime = async () => {
         if (isDemoMode) {
             setBarbershop(prev => {
-                const updated = { ...prev, wait_time_minutes: 0 };
+                const updated = { ...prev, wait_time_minutes: 0, updated_at: new Date().toISOString() };
                 localStorage.setItem('zeta_demo_shop', JSON.stringify(updated));
                 window.dispatchEvent(new Event('storage-local'));
                 return updated;
@@ -585,6 +596,15 @@ export function BarbershopProvider({ children }) {
             // Update stats
             setStats(prev => ({ ...prev, todayServed: prev.todayServed + 1 }));
 
+            // Update chair active time for demo mode
+            setBarbershop(prev => {
+                const chairTime = next.total_duration || 25;
+                const updated = { ...prev, wait_time_minutes: chairTime, updated_at: new Date().toISOString() };
+                localStorage.setItem('zeta_demo_shop', JSON.stringify(updated));
+                window.dispatchEvent(new Event('storage-local'));
+                return updated;
+            });
+
             return next;
         }
 
@@ -595,12 +615,13 @@ export function BarbershopProvider({ children }) {
 
         // Update Barbershop with the new chair time (the called client's expected duration)
         const chairTime = next.total_duration || 25;
+        const nowIso = new Date().toISOString();
         await supabase
             .from('barbershops')
-            .update({ wait_time_minutes: chairTime, updated_at: new Date().toISOString() })
+            .update({ wait_time_minutes: chairTime, updated_at: nowIso })
             .eq('id', barbershop.id);
 
-        setBarbershop(prev => prev ? { ...prev, wait_time_minutes: chairTime } : prev);
+        setBarbershop(prev => prev ? { ...prev, wait_time_minutes: chairTime, updated_at: nowIso } : prev);
 
         // Re-number positions
         const remaining = queue.slice(1);
@@ -847,7 +868,7 @@ export function BarbershopProvider({ children }) {
         }
 
         // Separate services from other barbershop fields
-        const { services: newServices, slug, ...barbershopFields } = updates;
+        const { services: newServices, slug: _slug, ...barbershopFields } = updates;
 
         // 1. Update barbershop fields (non-services)
         if (Object.keys(barbershopFields).length > 0) {
@@ -986,6 +1007,7 @@ export function BarbershopProvider({ children }) {
     );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useBarbershop() {
     const context = useContext(BarbershopContext);
     if (!context) {
