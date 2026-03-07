@@ -850,6 +850,13 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.fin-table-header,
+.fin-table-row {
+    min-width: 540px;
 }
 
 .fin-table-header {

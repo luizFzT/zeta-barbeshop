@@ -41,6 +41,7 @@ export default function DashboardPage() {
     } = useBarbershop();
 
     const [activeTab, setActiveTab] = useState('queue');
+    const mainRef = useRef(null);
     const [timeAnimation, setTimeAnimation] = useState(false);
     const [calledCustomer, setCalledCustomer] = useState(null);
     const [manualName, setManualName] = useState('');
@@ -153,7 +154,7 @@ export default function DashboardPage() {
             </header>
 
             {/* Main Content */}
-            <main className="dash-main-scroll">
+            <main className="dash-main-scroll" ref={mainRef}>
                 {calledCustomer && (
                     <div className="dash-called-notification animate-fade-in">
                         Chamando: <strong>{calledCustomer}</strong>
@@ -232,7 +233,7 @@ export default function DashboardPage() {
                                 <button
                                     key={tab.id}
                                     className={`dash-nav-fab ${activeTab === tab.id ? 'active' : ''}`}
-                                    onClick={() => setActiveTab(tab.id)}
+                                    onClick={() => { setActiveTab(tab.id); mainRef.current?.scrollTo(0, 0); }}
                                 >
                                     <div className="dash-fab-circle">
                                         <span className="material-symbols-outlined">add</span>
@@ -246,7 +247,7 @@ export default function DashboardPage() {
                             <button
                                 key={tab.id}
                                 className={`dash-nav-btn ${activeTab === tab.id ? 'active' : ''}`}
-                                onClick={() => setActiveTab(tab.id)}
+                                onClick={() => { setActiveTab(tab.id); mainRef.current?.scrollTo(0, 0); }}
                             >
                                 <span className="material-symbols-outlined">{tab.icon}</span>
                                 <span className="dash-nav-label">{tab.label}</span>

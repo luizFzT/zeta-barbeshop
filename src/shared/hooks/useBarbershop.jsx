@@ -211,8 +211,6 @@ export function BarbershopProvider({ children }) {
             if (rawHistory) setHistory(JSON.parse(rawHistory));
         };
         window.addEventListener('storage', handleStorage);
-        // Custom internal event for same-tab updates
-        window.addEventListener('storage-local', handleStorage);
         window.addEventListener('storage-local', handleStorage);
         return () => {
             window.removeEventListener('storage', handleStorage);
