@@ -28,7 +28,7 @@ export default function InstallPromptPage() {
                 <h1 className="install-title">Zeta Barbershop</h1>
                 <p className="install-subtitle">
                     Este é um aplicativo privado.<br />
-                    Para acessar o sistema, você precisa instalá-mo no seu dispositivo.
+                    Para acessar o sistema, você precisa instalá-lo no seu dispositivo.
                 </p>
 
                 <div className="install-instructions">

@@ -621,6 +621,12 @@
     gap: var(--space-4);
 }
 
+@media (max-width: 480px) {
+    .dash-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 .dash-stat-card {
     background: var(--bg-glass);
     backdrop-filter: var(--glass-blur);

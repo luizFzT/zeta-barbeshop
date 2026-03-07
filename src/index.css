@@ -18,7 +18,7 @@
   /* Text */
   --text-primary: #F8FAFC;
   --text-secondary: #94A3B8;
-  --text-muted: #475569;
+  --text-muted: #64748B;
   --text-dim: #334155;
   --text-inverse: #09090B;
 
@@ -29,11 +29,15 @@
   --accent-light: rgba(168, 85, 247, 0.15);
   --accent-glow: rgba(168, 85, 247, 0.3);
 
+  /* Secondary Accent (Pink) */
+  --accent-secondary: #DB2777;
+  --accent-secondary-light: rgba(219, 39, 119, 0.15);
+
   /* Secondary Neon (deprecated) */
-  --neon-secondary: transparent;
-  --neon-secondary-dim: transparent;
-  --neon-secondary-light: transparent;
-  --neon-secondary-glow: transparent;
+  --neon-secondary: #22d3ee;
+  --neon-secondary-dim: #06b6d4;
+  --neon-secondary-light: rgba(34, 211, 238, 0.08);
+  --neon-secondary-glow: rgba(34, 211, 238, 0.15);
 
   /* Semantic */
   --success: #10B981;
@@ -49,7 +53,7 @@
 
   /* Typography */
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-display: 'Inter', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -494,7 +498,7 @@ select {
 
 .badge-cyan {
   background: var(--neon-secondary-light);
-  color: var(--accent);
+  color: var(--neon-secondary);
   border: 1px solid rgba(34, 211, 238, 0.3);
 }
 

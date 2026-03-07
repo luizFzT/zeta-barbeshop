@@ -139,24 +139,33 @@ export default function LandingPage() {
                         <div className="testimonial-card card">
                             <p className="testimonial-quote">"Cara, incrível essa plataforma! Eu usava agenda de papel e vivia com buracos porque o cliente marcava e não vinha. Com a fila em tempo real, a cadeira não esfria nunca mais."</p>
                             <div className="testimonial-author">
-                                <strong>Marcos Silva</strong>
-                                <span>Dono de Barbearia</span>
+                                <div className="testimonial-avatar" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-secondary))' }}>M</div>
+                                <div className="testimonial-author-info">
+                                    <strong>Marcos Silva</strong>
+                                    <span>Dono de Barbearia</span>
+                                </div>
                             </div>
                         </div>
 
                         <div className="testimonial-card card">
                             <p className="testimonial-quote">"Meus clientes acham que eu gastei fortunas num app próprio. Eles chegam no balcão, leem o QR do Zeta e vão tomar um café na esquina enquanto acompanham a posição no celular."</p>
                             <div className="testimonial-author">
-                                <strong>Felipe Oliveira</strong>
-                                <span>Barbeiro Autônomo</span>
+                                <div className="testimonial-avatar" style={{ background: 'linear-gradient(135deg, #22d3ee, #06b6d4)' }}>F</div>
+                                <div className="testimonial-author-info">
+                                    <strong>Felipe Oliveira</strong>
+                                    <span>Barbeiro Autônomo</span>
+                                </div>
                             </div>
                         </div>
 
                         <div className="testimonial-card card">
                             <p className="testimonial-quote">"Cada dia eu vejo que assinar o Zeta foi o melhor investimento. O painel financeiro me mostra exatamente quais cortes dão mais lucro na semana. 100% recomendável."</p>
                             <div className="testimonial-author">
-                                <strong>Carlos J.</strong>
-                                <span>CEO Barbearias Prime</span>
+                                <div className="testimonial-avatar" style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>C</div>
+                                <div className="testimonial-author-info">
+                                    <strong>Carlos J.</strong>
+                                    <span>CEO Barbearias Prime</span>
+                                </div>
                             </div>
                         </div>
 

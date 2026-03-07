@@ -3,7 +3,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--bg-default);
+    background:
+        radial-gradient(circle at 50% 30%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(34, 211, 238, 0.05) 0%, transparent 40%),
+        var(--bg-primary);
     color: var(--text-primary);
     padding: var(--space-4);
     text-align: center;
@@ -12,6 +15,7 @@
 .install-prompt-content {
     max-width: 400px;
     width: 100%;
+    animation: fadeInUp 0.8s ease forwards;
 }
 
 .install-logo-wrapper {
@@ -25,15 +29,20 @@
     height: 150px;
     border-radius: 50%;
     object-fit: cover;
-    box-shadow: 0 10px 30px rgba(118, 56, 250, 0.4);
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.4), 0 10px 30px rgba(0, 0, 0, 0.4);
     border: 2px solid var(--accent);
+    animation: breathe 4s ease-in-out infinite;
 }
 
 .install-title {
     font-size: 1.8rem;
-    font-weight: 700;
+    font-weight: 800;
     margin-bottom: var(--space-2);
-    color: var(--text-primary);
+    font-family: var(--font-display);
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .install-subtitle {
@@ -44,11 +53,14 @@
 }
 
 .install-instructions {
-    background: var(--surface-1);
+    background: var(--bg-glass);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     border-radius: var(--radius-lg);
     padding: var(--space-6);
     text-align: left;
-    border: 1px solid var(--border-color);
+    border: var(--glass-border);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .install-instructions h3 {
@@ -71,7 +83,7 @@
 
 .step-icon {
     font-size: 1.5rem;
-    color: var(--primary);
+    color: var(--accent);
     margin-top: 2px;
 }
 

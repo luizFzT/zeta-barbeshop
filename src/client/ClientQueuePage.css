@@ -229,13 +229,32 @@
 
 .cq-circular-progress {
     position: relative;
-    width: 180px;
-    height: 180px;
+    width: 220px;
+    height: 220px;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: var(--space-4) 0;
     animation: liquid-pulse 4s infinite ease-in-out;
+}
+
+.cq-circular-progress::before {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    border: 2px dashed rgba(168, 85, 247, 0.2);
+    animation: spin-slow 20s linear infinite;
+}
+
+@keyframes spin-slow {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 @keyframes liquid-pulse {
@@ -710,11 +729,54 @@
     box-shadow: 0 0 15px rgba(168, 85, 247, 0.15);
 }
 
+.cq-so-checkbox {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
 .cq-so-checkbox input {
-    width: 20px;
-    height: 20px;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
     cursor: pointer;
-    accent-color: var(--accent);
+}
+
+.cq-so-checkbox::before {
+    content: '';
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.03);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.cq-service-option.selected .cq-so-checkbox::before {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.cq-so-checkbox::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: 14px;
+    font-weight: 800;
+    color: white;
+    transition: transform var(--transition-fast);
+    pointer-events: none;
+}
+
+.cq-service-option.selected .cq-so-checkbox::after {
+    transform: translate(-50%, -50%) scale(1);
 }
 
 .cq-so-details {

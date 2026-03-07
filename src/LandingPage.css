@@ -31,7 +31,9 @@
 
 /* Base Buttons for LP */
 .btn-cta {
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent) 100%);
+    background: linear-gradient(270deg, var(--accent), var(--accent-secondary), var(--accent));
+    background-size: 200% 200%;
+    animation: gradient-shift 4s ease infinite;
     color: #fff;
     font-size: var(--font-size-lg);
     font-weight: 800;
@@ -43,10 +45,26 @@
     transition: all 0.3s ease;
 }
 
+@keyframes gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
 .btn-cta:hover {
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 15px 40px rgba(236, 72, 153, 0.5);
-    background: linear-gradient(135deg, var(--accent-hover) 0%, #f472b6 100%);
+    box-shadow: 0 15px 40px rgba(219, 39, 119, 0.5);
+    background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent-secondary) 100%);
+    background-size: 100% 100%;
+    animation: none;
 }
 
 .btn-huge {
@@ -128,7 +146,7 @@
 }
 
 .hero-highlight {
-    background: linear-gradient(to right, var(--accent) 0%, var(--accent) 100%);
+    background: linear-gradient(to right, var(--accent) 0%, var(--accent-secondary) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -355,15 +373,35 @@
 
 .testimonial-author {
     display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.testimonial-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: white;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.testimonial-author-info {
+    display: flex;
     flex-direction: column;
 }
 
-.testimonial-author strong {
+.testimonial-author-info strong {
     color: var(--accent);
     font-size: 1.1rem;
 }
 
-.testimonial-author span {
+.testimonial-author-info span {
     color: var(--text-muted);
     font-size: 0.9rem;
 }
