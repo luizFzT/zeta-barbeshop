@@ -13,8 +13,9 @@ export default function ProtectedRoute({ children }) {
                 justifyContent: 'center',
                 background: 'var(--bg-primary)',
             }}>
-                <div className="animate-pulse" style={{ color: 'var(--accent)', fontSize: '1.5rem' }}>
-                    ✂️ Carregando...
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', color: 'var(--text-muted)' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '48px', color: 'var(--accent)', animation: 'spin 2s linear infinite' }}>content_cut</span>
+                    <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.2rem', color: 'var(--text-primary)', margin: 0 }}>Carregando...</h2>
                 </div>
             </div>
         );

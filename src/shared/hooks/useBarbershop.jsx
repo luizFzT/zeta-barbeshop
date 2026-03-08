@@ -569,11 +569,23 @@ export function BarbershopProvider({ children }) {
             // Add to history
             let newH;
             setHistory(prev => {
+                const nowIso = new Date().toISOString();
+                const nowTime = new Date(nowIso).getTime();
+
+                // Remove previous entries for the exact same customer that happened in the last 60 seconds (double-click protection)
+                const filteredPrev = prev.filter(h => {
+                    const isSameName = h.customer_name.trim().toLowerCase() === next.customer_name.trim().toLowerCase();
+                    if (!isSameName) return true;
+
+                    const timeDiffValid = Math.abs(nowTime - new Date(h.served_at).getTime()) > 60000;
+                    return timeDiffValid;
+                });
+
                 newH = [{
                     id: `h-${Date.now()}`,
                     customer_name: next.customer_name,
-                    served_at: new Date().toISOString(),
-                }, ...prev];
+                    served_at: nowIso,
+                }, ...filteredPrev];
                 return newH;
             });
             setTimeout(() => saveDemoHistory(newH), 0);
@@ -997,10 +1009,6 @@ export function BarbershopProvider({ children }) {
             getLoyaltyInfo,
             redeemFreeCut,
             updateBarbershopSettings,
-            regenerateFinancial: (services) => {
-                const data = regenerateDemoFinancial(services);
-                setFinancialData(data);
-            },
         }}>
             {children}
         </BarbershopContext.Provider>

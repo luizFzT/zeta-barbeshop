@@ -484,9 +484,9 @@ export default function ClientQueuePage() {
                             /* ===== LOGGED IN / JOINED DASHBOARD ===== */
                             <div className="cq-dashboard animate-fade-in">
                                 <div className="cq-dash-header text-center" style={{ marginBottom: 'var(--space-6)' }}>
-                                    <h1 className="cq-status-massive" style={{ fontSize: 'clamp(32px, 8vw, 48px)', fontWeight: '900', background: 'linear-gradient(135deg, var(--text-primary), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: '1.2' }}>
+                                    <h2 className="cq-status-massive" style={{ fontSize: 'clamp(32px, 8vw, 48px)', fontWeight: '900', background: 'linear-gradient(135deg, var(--text-primary), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', lineHeight: '1.2' }}>
                                         {myPosition === 1 ? (wasExpired ? 'Tempo Esgotado' : 'Sua vez!') : 'Na fila!'}
-                                    </h1>
+                                    </h2>
                                     <p className="cq-status-sub" style={{ color: 'var(--text-muted)' }}>
                                         {myPosition === 1 ? (wasExpired ? 'Você não confirmou a tempo.' : 'Dirija-se à cadeira do barbeiro.') : 'Fique de olho no tempo estimado para não perder a vez.'}
                                     </p>
@@ -782,12 +782,12 @@ export default function ClientQueuePage() {
 
                                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', zIndex: 20 }}>
                                                     {(() => {
-                                                        const totalMins = joinFlowEstimatedMinutes || 0;
+                                                        const totalMins = Math.ceil(joinFlowEstimatedMinutes || 0);
                                                         const h = Math.floor(totalMins / 60);
                                                         const m = totalMins % 60;
                                                         const isLong = totalMins >= 60;
                                                         return (
-                                                            <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: isLong ? (m > 0 ? '3.2rem' : '4rem') : '4.5rem', color: 'var(--text-primary)', letterSpacing: '-2px', textShadow: '0 0 15px rgba(168,85,247,0.3)', lineHeight: '1', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
+                                                            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: isLong ? (m > 0 ? '3.2rem' : '4rem') : '4.5rem', color: 'var(--text-primary)', letterSpacing: '-2px', textShadow: '0 0 15px rgba(168,85,247,0.3)', lineHeight: '1', display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
                                                                 {isLong ? (
                                                                     <>
                                                                         {h}<span style={{ fontSize: '1.5rem', opacity: 0.8, letterSpacing: '0', marginLeft: '2px', marginRight: '6px' }}>h</span>
@@ -798,7 +798,7 @@ export default function ClientQueuePage() {
                                                                         {totalMins}<span style={{ fontSize: '1.5rem', opacity: 0.8, letterSpacing: '0', marginLeft: '2px' }}>m</span>
                                                                     </>
                                                                 )}
-                                                            </h1>
+                                                            </h2>
                                                         );
                                                     })()}
                                                     <p style={{ color: 'var(--text-muted)', fontSize: '11px', letterSpacing: '2px', textTransform: 'uppercase', marginTop: '12px' }}>Tempo Estimado</p>
@@ -929,7 +929,7 @@ export default function ClientQueuePage() {
                                                 <form onSubmit={handleGuestJoin}>
                                                     <input className="input" type="text" placeholder="Seu nome" value={guestName} onChange={(e) => setGuestName(e.target.value)} maxLength={50} required style={{ marginBottom: '12px' }} disabled={isJoining} />
                                                     <button className="btn btn-secondary btn-block" type="submit" style={{ padding: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center' }} disabled={isJoining}>
-                                                        {isJoining ? <span className="cq-loading-icon" style={{ fontSize: '20px', animation: 'spin 1s linear infinite' }}>⏳</span> : 'Entrar na Fila'}
+                                                        {isJoining ? <span className="material-symbols-outlined cq-loading-icon" style={{ fontSize: '20px', animation: 'spin 1s linear infinite' }}>autorenew</span> : 'Entrar na Fila'}
                                                     </button>
                                                 </form>
                                             </div>

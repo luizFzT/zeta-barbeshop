@@ -66,7 +66,6 @@ function DashboardPage() {
         subscribeRealtime,
         redeemFreeCut,
         updateBarbershopSettings,
-        regenerateFinancial,
         skipEntry,
     } = useBarbershop();
 
@@ -96,8 +95,11 @@ function DashboardPage() {
         }
     }, [barbershop?.id, subscribeRealtime]);
 
-    // Initialize form with current data
-    useEffect(() => {
+    const [prevBarbershop, setPrevBarbershop] = useState(null);
+
+    // Initialize form with current data during render (avoids setState in effect warning)
+    if (barbershop !== prevBarbershop) {
+        setPrevBarbershop(barbershop);
         if (barbershop) {
             setSettingsForm({
                 name: barbershop.name || '',
@@ -114,7 +116,7 @@ function DashboardPage() {
                 services: barbershop.services || [],
             });
         }
-    }, [barbershop]);
+    }
 
     const handleTimeChange = (delta) => {
         setTimeAnimation(true);
@@ -239,7 +241,6 @@ function DashboardPage() {
                         financialData={financialData}
                         barbershop={barbershop}
                         updateBarbershopSettings={updateBarbershopSettings}
-                        regenerateFinancial={regenerateFinancial}
                         setSettingsForm={setSettingsForm}
                         stats={stats}
                     />
@@ -432,29 +433,13 @@ function ActiveClientCanvas({ client, barbershop }) {
             {/* Minimalist Barber Chair Watermark */}
             <div style={{
                 position: 'absolute',
-                right: '8%',
+                right: '5%',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                opacity: 0.04,
-                pointerEvents: 'none',
+                opacity: 0.95,
                 zIndex: 0
             }}>
-                <svg width="150" height="150" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round">
-                    {/* Base */}
-                    <path d="M7 21h10" />
-                    <path d="M12 17v4" />
-                    <path d="M10 17h4" />
-                    {/* Seat */}
-                    <path d="M7 13h10v2a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-2z" />
-                    {/* Backrest */}
-                    <path d="M8 13V9a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v4" />
-                    {/* Headrest */}
-                    <path d="M10 7V5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2" />
-                    {/* Armrests */}
-                    <path d="M5 10h14" />
-                    <path d="M5 10v3" />
-                    <path d="M19 10v3" />
-                </svg>
+                <img src="/barber_chair_neon.png" alt="Cadeira de Barbeiro" style={{ width: '150px', height: '150px', objectFit: 'contain', filter: 'drop-shadow(0 0 10px rgba(0, 240, 255, 0.5))' }} />
             </div>
 
             {/* Subtle Neon Glow Decoration */}
@@ -476,19 +461,19 @@ function ActiveClientCanvas({ client, barbershop }) {
                     width: '64px',
                     height: '64px',
                     borderRadius: '24px',
-                    background: hasAvatar ? 'transparent' : 'rgba(255, 255, 255, 0.03)',
-                    border: hasAvatar ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+                    background: hasAvatar ? 'transparent' : 'rgba(168, 85, 247, 0.05)',
+                    border: hasAvatar ? 'none' : '1px solid var(--accent)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     overflow: 'hidden',
-                    boxShadow: hasAvatar ? '0 8px 16px rgba(0,0,0,0.4)' : 'none',
+                    boxShadow: hasAvatar ? '0 8px 16px rgba(0,0,0,0.4)' : 'inset 0 0 10px rgba(168, 85, 247, 0.2), 0 0 10px rgba(168, 85, 247, 0.2)',
                     flexShrink: 0
                 }}>
                     {hasAvatar ? (
                         <img src={avatarUrl} alt={client.customer_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                        <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--primary)', opacity: 0.8 }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--accent)', opacity: 0.9 }}>
                             content_cut
                         </span>
                     )}
@@ -539,18 +524,19 @@ function ActiveClientCanvas({ client, barbershop }) {
                     {serviceDetails.map((service, idx) => (
                         <div key={idx} style={{
                             padding: '6px 14px',
-                            background: 'rgba(255,255,255, 0.04)',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            background: 'rgba(168, 85, 247, 0.05)',
+                            border: '1px solid var(--accent)',
                             borderRadius: '100px',
                             fontSize: '11px',
-                            fontWeight: '500',
+                            fontWeight: '600',
                             letterSpacing: '0.5px',
-                            color: 'var(--text-muted)',
+                            color: 'var(--accent)',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '6px'
+                            gap: '6px',
+                            boxShadow: 'inset 0 0 8px rgba(168, 85, 247, 0.1), 0 0 8px rgba(168, 85, 247, 0.2)'
                         }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 8px var(--primary)' }} />
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 8px var(--accent)' }} />
                             {service.name}
                         </div>
                     ))}
@@ -782,7 +768,7 @@ function LoyaltySection({ loyalty, barbershop, redeemFreeCut }) {
     return (
         <div className="dash-section stagger">
             <div className="dash-section-header">
-                <h1 className="dash-page-title">Programa de Fidelidade</h1>
+                <h2 className="dash-page-title">Programa de Fidelidade</h2>
                 <span className="dash-loyalty-rule">{target} cortes = 1 grátis</span>
             </div>
 
@@ -860,7 +846,7 @@ function StatsSection({ stats, history, queue }) {
     return (
         <div className="dash-section stagger">
             <div className="dash-section-header">
-                <h1 className="dash-page-title">Estatísticas</h1>
+                <h2 className="dash-page-title">Estatísticas</h2>
             </div>
 
             <div className="dash-stats-grid">
@@ -976,7 +962,7 @@ function SettingsSection({ form, setForm, onSave, saved, avatarUrl }) {
     return (
         <div className="dash-section stagger">
             <div className="dash-section-header">
-                <h1 className="dash-page-title">Configurações</h1>
+                <h2 className="dash-page-title">Configurações</h2>
             </div>
 
             <form className="dash-card dash-settings-form" onSubmit={onSave}>
@@ -1249,7 +1235,7 @@ const PIE_COLORS = [
     '#818cf8', '#facc15', '#f87171', '#2dd4bf', '#c084fc',
 ];
 
-function FinanceSection({ financialData, barbershop, updateBarbershopSettings, regenerateFinancial, setSettingsForm }) {
+function FinanceSection({ financialData, barbershop, updateBarbershopSettings, setSettingsForm }) {
     const [editingServiceId, setEditingServiceId] = useState(null);
     const [editPrice, setEditPrice] = useState('');
 
@@ -1320,14 +1306,7 @@ function FinanceSection({ financialData, barbershop, updateBarbershopSettings, r
     return (
         <div className="dash-section stagger">
             <div className="dash-section-header">
-                <h1 className="dash-page-title">Financeiro</h1>
-                <button
-                    className="btn btn-secondary btn-sm"
-                    onClick={() => regenerateFinancial(services)}
-                    title="Gerar novos dados simulados"
-                >
-                    ↻ Regenerar Dados
-                </button>
+                <h2 className="dash-page-title">Financeiro</h2>
             </div>
 
             {financialData.length === 0 ? (
@@ -1336,7 +1315,7 @@ function FinanceSection({ financialData, barbershop, updateBarbershopSettings, r
                         <span>
                             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
                         </span>
-                        <p>Nenhum dado financeiro. Cadastre serviços e clique em &quot;Regenerar Dados&quot;.</p>
+                        <p>Nenhum dado financeiro. Cadastre serviços e inicie os atendimentos para gerar receita.</p>
                     </div>
                 </div>
             ) : (
@@ -1424,7 +1403,7 @@ function FinanceSection({ financialData, barbershop, updateBarbershopSettings, r
                                 <span>Ações</span>
                             </div>
                             {aggList.map((item, i) => {
-                                const currentService = services.find(s => s.id === item.id);
+                                const currentService = services.find(s => s.id === item.id) || services.find(s => s.name === item.name);
                                 const currentPrice = currentService?.price || item.revenue / item.count;
                                 const isLowSales = item.count <= 2;
 
@@ -1438,7 +1417,7 @@ function FinanceSection({ financialData, barbershop, updateBarbershopSettings, r
                                         <span className="fin-table-count">{item.count}</span>
                                         <span className="fin-table-revenue">R$ {item.revenue.toFixed(0)}</span>
                                         <div className="fin-table-price">
-                                            {editingServiceId !== null && editingServiceId === item.id ? (
+                                            {editingServiceId !== null && currentService && editingServiceId === currentService.id ? (
                                                 <div className="fin-edit-price">
                                                     <input
                                                         className="input fin-price-input"
@@ -1446,9 +1425,9 @@ function FinanceSection({ financialData, barbershop, updateBarbershopSettings, r
                                                         value={editPrice}
                                                         onChange={e => setEditPrice(e.target.value)}
                                                         autoFocus
-                                                        onKeyDown={e => e.key === 'Enter' && handleSavePrice(item.id)}
+                                                        onKeyDown={e => e.key === 'Enter' && handleSavePrice(currentService.id)}
                                                     />
-                                                    <button className="btn btn-primary btn-sm" onClick={() => handleSavePrice(item.id)}>✓</button>
+                                                    <button className="btn btn-primary btn-sm" onClick={() => handleSavePrice(currentService.id)}>✓</button>
                                                     <button className="btn btn-ghost btn-sm" onClick={() => setEditingServiceId(null)}>✕</button>
                                                 </div>
                                             ) : (
@@ -1456,18 +1435,18 @@ function FinanceSection({ financialData, barbershop, updateBarbershopSettings, r
                                             )}
                                         </div>
                                         <div className="fin-table-actions">
-                                            {editingServiceId !== item.id && currentService && (
+                                            {currentService && editingServiceId !== currentService.id && (
                                                 <>
                                                     <button
                                                         className="btn btn-secondary btn-sm"
-                                                        onClick={() => handleStartEdit(item.id, currentPrice)}
+                                                        onClick={() => handleStartEdit(currentService.id, currentPrice)}
                                                     >
                                                         Ajustar
                                                     </button>
                                                     {isLowSales && (
                                                         <button
                                                             className="btn btn-accent btn-sm fin-promo-btn"
-                                                            onClick={() => handlePromotion(item.id)}
+                                                            onClick={() => handlePromotion(currentService.id)}
                                                             title="Aplicar -20% de desconto"
                                                         >
                                                             -20%
@@ -1555,7 +1534,7 @@ function QRCodeSection({ barbershop }) {
                 <h2>${barbershop.name}</h2>
                 <p>Escaneie o QR Code para entrar na fila</p>
                 <img src="${qrRef.current?.querySelector('canvas')?.toDataURL()}" />
-                <div class="print-footer">📱 Aponte a câmera aqui</div>
+                <div class="print-footer"><span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 4px;">qr_code_scanner</span> Aponte a câmera aqui</div>
                 <div class="print-url">${publicUrl}</div>
             </div>
             </body></html>
@@ -1577,7 +1556,7 @@ function QRCodeSection({ barbershop }) {
     return (
         <div className="dash-section stagger">
             <div className="dash-section-header">
-                <h1 className="dash-page-title">QR Code da Fila</h1>
+                <h2 className="dash-page-title">QR Code da Fila</h2>
             </div>
 
             {/* QR Preview Card */}
@@ -1642,19 +1621,31 @@ function QRCodeSection({ barbershop }) {
                     <QRCodeCanvas value={publicUrl} size={200} level="H" bgColor="#ffffff" fgColor="#1a1a2e" includeMargin={true} />
                 </div>
                 <div className="qr-print-footer">
-                    <span>📱 Aponte a câmera aqui</span>
+                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <span className="material-symbols-outlined">qr_code_scanner</span> Aponte a câmera aqui
+                    </span>
                     <span className="qr-print-url">{publicUrl}</span>
                 </div>
             </div>
 
             {/* Usage Tips */}
             <div className="dash-card qr-tips">
-                <div className="dash-card-label">💡 Dicas de uso</div>
+                <div className="dash-card-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className="material-symbols-outlined" style={{ color: 'var(--warning)' }}>lightbulb</span> Dicas de uso
+                </div>
                 <ul className="qr-tips-list">
-                    <li>📋 Imprima e cole na entrada da barbearia</li>
-                    <li>📱 Fixe no celular para mostrar aos clientes</li>
-                    <li>📲 Compartilhe nas redes sociais e WhatsApp</li>
-                    <li>🪧 Coloque em um display na recepção</li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent)' }}>print</span> Imprima e cole na entrada da barbearia
+                    </li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent)' }}>smartphone</span> Fixe no celular para mostrar aos clientes
+                    </li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent)' }}>share</span> Compartilhe nas redes sociais e WhatsApp
+                    </li>
+                    <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent)' }}>storefront</span> Coloque em um display na recepção
+                    </li>
                 </ul>
             </div>
         </div>

@@ -4,3 +4,13 @@ dist/
 .env.local
 .DS_Store
 .vercel
+.agent/
+*_report.txt
+*_summary.txt
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!deno.json
+!composer.json
+audit_results.txt

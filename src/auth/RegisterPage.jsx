@@ -95,7 +95,7 @@ export default function RegisterPage() {
                     />
                     {shopName && (
                         <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
-                            🔗 Slug: <strong style={{ color: 'var(--accent)' }}>/view/{generateSlug(shopName)}</strong>
+                            <span className="material-symbols-outlined" style={{ fontSize: '16px', verticalAlign: 'middle' }}>link</span> Slug: <strong style={{ color: 'var(--accent)' }}>/view/{generateSlug(shopName)}</strong>
                         </span>
                     )}
                 </div>

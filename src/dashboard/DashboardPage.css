@@ -881,6 +881,7 @@
     align-items: center;
     transition: all var(--transition-fast);
     border: 1px solid transparent;
+    border-left: 3px solid var(--border-light);
 }
 
 .fin-table-row:hover {
