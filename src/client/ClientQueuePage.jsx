@@ -119,7 +119,10 @@ export default function ClientQueuePage() {
             const session = JSON.parse(saved);
             if (session.barbershop_id !== barbershop.id) return; // different shop
             // Check if the entry still exists in the active queue
-            const existingEntry = queue.find(e => e.id === session.entry_id && e.status === 'waiting');
+            const existingEntry = queue.find(e =>
+                e.id === session.entry_id &&
+                ['waiting', 'called', 'in_service'].includes(e.status)
+            );
             if (existingEntry) {
                 setMyEntryId(existingEntry.id);
                 setMyPosition(existingEntry.position);
