@@ -1,18 +1,49 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase, isDemoMode } from './shared/services/supabase';
 import './InstallPromptPage.css';
 
 export default function InstallPromptPage() {
     const navigate = useNavigate();
+    const [deferredPrompt, setDeferredPrompt] = useState(null);
+    const [installing, setInstalling] = useState(false);
 
     useEffect(() => {
-        // Detect if the app is already installed and running in standalone mode (PWA)
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
         if (isStandalone) {
-            navigate('/auth/login');
+            // App is running as PWA — check if user is already logged in
+            const checkSession = async () => {
+                if (isDemoMode) {
+                    navigate('/auth/login');
+                    return;
+                }
+                const { data: { session } } = await supabase.auth.getSession();
+                navigate(session ? '/dashboard' : '/auth/login');
+            };
+            checkSession();
+            return;
         }
+
+        // Capture native install prompt (Android Chrome)
+        const handler = (e) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handler);
+        return () => window.removeEventListener('beforeinstallprompt', handler);
     }, [navigate]);
+
+    const handleInstall = async () => {
+        if (!deferredPrompt) return;
+        setInstalling(true);
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            setDeferredPrompt(null);
+        }
+        setInstalling(false);
+    };
 
     return (
         <div className="install-prompt-container">
@@ -31,19 +62,33 @@ export default function InstallPromptPage() {
                     Para acessar o sistema, você precisa instalá-lo no seu dispositivo.
                 </p>
 
-                <div className="install-instructions">
-                    <h3>Como Instalar:</h3>
-
-                    <div className="instruction-step">
-                        <span className="step-icon material-symbols-outlined">ios_share</span>
-                        <p><strong>No iPhone (Safari):</strong> Toque no ícone de "Compartilhar" na barra inferior e selecione <strong>"Adicionar à Tela de Início"</strong>.</p>
+                {deferredPrompt ? (
+                    <div className="install-instructions">
+                        <button
+                            className="btn btn-primary btn-lg"
+                            onClick={handleInstall}
+                            disabled={installing}
+                            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '1.1rem' }}
+                        >
+                            <span className="material-symbols-outlined">download</span>
+                            {installing ? 'Instalando...' : 'Instalar Agora'}
+                        </button>
                     </div>
+                ) : (
+                    <div className="install-instructions">
+                        <h3>Como Instalar:</h3>
 
-                    <div className="instruction-step">
-                        <span className="step-icon material-symbols-outlined">more_vert</span>
-                        <p><strong>No Android (Chrome):</strong> Toque nos três pontinhos no canto superior e selecione <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar aplicativo"</strong>.</p>
+                        <div className="instruction-step">
+                            <span className="step-icon material-symbols-outlined">ios_share</span>
+                            <p><strong>No iPhone (Safari):</strong> Toque no ícone de "Compartilhar" na barra inferior e selecione <strong>"Adicionar à Tela de Início"</strong>.</p>
+                        </div>
+
+                        <div className="instruction-step">
+                            <span className="step-icon material-symbols-outlined">more_vert</span>
+                            <p><strong>No Android (Chrome):</strong> Toque nos três pontinhos no canto superior e selecione <strong>"Adicionar à tela inicial"</strong> ou <strong>"Instalar aplicativo"</strong>.</p>
+                        </div>
                     </div>
-                </div>
+                )}
 
                 <div className="install-footer">
                     <p>Após instalar, abra o ícone do Zeta na sua tela inicial para fazer login.</p>

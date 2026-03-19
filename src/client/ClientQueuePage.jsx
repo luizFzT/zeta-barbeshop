@@ -216,18 +216,23 @@ export default function ClientQueuePage() {
             const myEntry = queue.find(e => e.id === myEntryId);
             if (myEntry) {
                 setMyPosition(myEntry.position);
-                // Position 1 notification
-                if (myEntry.position === 1 && myEntry.confirmation_status === 'confirmed') {
+
+                // ✅ CORRECT FLOW: Tolerance only starts when barber explicitly calls the client
+                // This is signaled by status === 'called' (set by callNext in the hook)
+                if (myEntry.status === 'called') {
                     setShowNotification(true);
                     playNotificationSound();
-                    sendNotification('🎯 É sua vez!', `Você tem ${barbershop?.tolerance_minutes || 5} minutos para chegar!`, 'zeta-your-turn');
-                    // Start tolerance countdown
+                    sendNotification('É sua vez!', `Você tem ${barbershop?.tolerance_minutes || 5} minutos para chegar!`, 'zeta-your-turn');
+                    // Start tolerance countdown only now
                     if (!toleranceEnd) {
                         setToleranceEnd(Date.now() + (barbershop?.tolerance_minutes || 5) * 60000);
                     }
+                } else if (myEntry.position === 1 && myEntry.confirmation_status === 'confirmed') {
+                    // Position 1 but waiting for barber to finish the current client — just notify once
+                    sendNotification('Quase lá!', 'Você é o próximo! Aguarde o barbeiro chamar.', 'zeta-almost');
                 }
             } else {
-                // Entry removed from queue
+                // Entry removed from queue (expired or left)
                 if (joinedQueue) {
                     setWasExpired(true);
                     sendNotification('Você saiu da fila', 'Sua vez expirou. Entre novamente se desejar.', 'zeta-expired');

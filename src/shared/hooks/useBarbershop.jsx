@@ -558,7 +558,17 @@ export function BarbershopProvider({ children }) {
         const next = queue[0];
 
         if (isDemoMode) {
-            // Remove from queue
+            // Mark the next client as 'called' so tolerance timer fires on client page
+            let calledQ;
+            setQueue(prev => {
+                calledQ = prev.map((item, i) => i === 0 ? { ...item, status: 'called' } : item);
+                return calledQ;
+            });
+            setTimeout(() => saveDemoQueue(calledQ), 0);
+
+            // After a 4-second grace period, fully remove from queue
+            await new Promise(resolve => setTimeout(resolve, 4000));
+
             let newQ;
             setQueue(prev => {
                 newQ = prev.slice(1).map((item, i) => ({ ...item, position: i + 1 }));
