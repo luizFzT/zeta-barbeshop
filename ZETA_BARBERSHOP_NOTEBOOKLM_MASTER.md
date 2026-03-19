@@ -1,6 +1,6 @@
 # 🪒 Zeta Barbershop: A Fronteira Digital das Barbearias
 > **Master Presentation Document for NotebookLM Deep Dive**
-> Versão: 1.5 (Pós-Auditoria de Segurança e UX)
+> Versão: 1.6 (Indicação entre Barbeiros & Persistência de Visitante)
 
 ---
 
@@ -35,6 +35,7 @@ O barbeiro tem uma central de comando completa:
 - **Gestão de Fila:** Botão "Chamar Próximo" com animações fluidas e sistema de segurança contra cliques duplos.
 - **Métricas Financeiras:** Gráficos de receita, ticket médio e "Serviço Campeão" da semana.
 - **QR Code Generator:** Sistema nativo para gerar e imprimir o código de acesso exclusivo da loja.
+- **Barber Share:** Ferramenta de indicação integrada no header e nas configurações para compartilhar o sistema com outros barbeiros via Web Share API.
 
 ### 📱 Experiência do Cliente (Smart Tracker)
 O cliente entra na fila sem baixar nenhum aplicativo (PWA):
@@ -59,8 +60,9 @@ O cliente entra na fila sem baixar nenhum aplicativo (PWA):
 1. **Acesso:** O cliente chega na barbearia e aponta a câmera para um display de acrílico com o QR Code.
 2. **Entrada:** Ele escolhe "Corte + Barba" e entra na fila como visitante ou logado.
 3. **Liberdade:** O sistema dá 25 minutos de espera. Ele vai tomar um café na esquina enquanto acompanha sua posição pelo celular.
-4. **Chamada:** O barbeiro aperta "Chamar Próximo". O cliente recebe a sinalização e tem uma janela de tolerância de 5 minutos para se sentar.
-5. **Fidelidade:** Ao finalizar, o sistema computa o valor e adiciona um ponto no cartão fidelidade digital do cliente.
+4. **Chamada:** O barbeiro aperta "Chamar Próximo". O cliente recebe a sinalização e tem uma janela de tolerância de 5 minutos para se sentar. Cartões de confirmação premium (amarelo/vermelho) orientam o cliente em tempo real.
+5. **Persistência:** O sistema agora preserva a sessão de visitantes mesmo durante o recarregamento da página em estados críticos (chamado ou em atendimento).
+6. **Fidelidade:** Ao finalizar, o sistema computa o valor e adiciona um ponto no cartão fidelidade digital do cliente.
 
 ---
 

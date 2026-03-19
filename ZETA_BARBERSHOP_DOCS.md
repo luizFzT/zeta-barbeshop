@@ -73,6 +73,7 @@ Acessada via `/dashboard`. Área restrita contendo múltiplas abas:
 - **Fidelidade:** Leitura de estatísticas dos clientes regulares.
 - **Estatísticas:** Gráficos de volume e horários de pico.
 - **QR Code:** Geração visual do código para a barbearia, com download de mockup pronto para impressão, preview de impressão limpa e botão para copiar link.
+- **Barber Share:** Ícone de compartilhamento rápido no header e card dedicado "Indique para um Amigo" na aba de Perfil, facilitando o crescimento orgânico da plataforma entre profissionais.
 - **Configurações:** Edição de dados da loja, gerenciamento dos serviços (nome, tempo, valor) e regras de negócio (Tolerância e Janela de Confirmação).
 
 ### 4.3 Storefront Page (Página Pública da Barbearia)
@@ -134,6 +135,8 @@ Para otimizar o tempo e não gerar brigas no balcão por limitações tecnológi
 5. **Resoluções (Falha Suave):**
    - **Se Confirmar:** Status vai para `confirmed`. 
    - **Se Ignorar:** Em vez de ejetar brutalmente o cliente (`expired`), o backend aplica uma "Degradação Suave". O status vai para `skipped` ou `paused`, empurrando-o 1 ou 2 posições para baixo para dar a vez a quem já confirmou. Evita discussões, retém a venda.
+
+**Resiliência de Sessão:** Visitantes mantêm sua posição e estado mesmo após recarregar a página (F5) em estados críticos como `called` (chamado) e `in_service` (em atendimento), via persistência inteligente em `localStorage`.
 
 ### 6.3 Controle de Tolerância na Cadeira
 Quando o barbeiro clica em "Chamar Próximo" (posição passa para 1º):
