@@ -531,11 +531,13 @@ export default function ClientQueuePage() {
 
                                     if (myPosition === 1 && toleranceCountdown) {
                                         return (
-                                            <div className="card card-glass" style={{ marginBottom: 'var(--space-5)', textAlign: 'center', border: '1px solid var(--accent)' }}>
-                                                <div style={{ fontSize: '12px', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Tempo de Tolerância</div>
-                                                <div style={{ fontSize: '32px', fontWeight: '800', fontFamily: 'monospace' }}>
+                                            <div className="card card-glass" style={{ marginBottom: 'var(--space-5)', textAlign: 'center', border: '1px solid rgba(239,68,68,0.5)', background: 'rgba(239,68,68,0.05)' }}>
+                                                <span className="material-symbols-outlined" style={{ fontSize: '28px', color: '#ef4444', marginBottom: '8px', display: 'block' }}>timer</span>
+                                                <div style={{ fontSize: '11px', color: '#ef4444', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '6px', fontWeight: '700' }}>Tempo de Tolerância</div>
+                                                <div style={{ fontSize: '36px', fontWeight: '900', fontFamily: 'monospace', color: '#ef4444', textShadow: '0 0 12px rgba(239,68,68,0.4)' }}>
                                                     {String(toleranceCountdown.m).padStart(2, '0')}:{String(toleranceCountdown.s).padStart(2, '0')}
                                                 </div>
+                                                <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px' }}>Dirija-se à barbearia antes que o tempo acabe.</p>
                                             </div>
                                         );
                                     }
@@ -551,11 +553,12 @@ export default function ClientQueuePage() {
 
                                     if (myEntry.confirmation_status === 'pending') {
                                         return (
-                                            <div className="card card-glass mb-4 text-center" style={{ background: 'rgba(245, 158, 11, 0.05)', borderColor: 'rgba(245, 158, 11, 0.3)' }}>
-                                                <span className="material-symbols-outlined" style={{ color: '#fbbf24', fontSize: '32px', marginBottom: '8px' }}>hourglass_empty</span>
-                                                <p style={{ color: '#fbbf24', fontWeight: '600', marginBottom: '16px' }}>Por favor, confirme sua presença or perderá a vez.</p>
+                                            <div className="card card-glass mb-4 text-center" style={{ background: 'rgba(245, 158, 11, 0.05)', borderColor: 'rgba(245, 158, 11, 0.4)', padding: 'var(--space-5)' }}>
+                                                <span className="material-symbols-outlined" style={{ color: '#fbbf24', fontSize: '32px', marginBottom: '8px', display: 'block' }}>hourglass_empty</span>
+                                                <div style={{ fontWeight: '700', fontSize: '15px', color: '#fbbf24', marginBottom: '6px' }}>Confirme sua presença</div>
+                                                <p style={{ color: 'var(--text-muted)', fontSize: '13px', lineHeight: '1.5', marginBottom: '16px' }}>Sua vez está se aproximando. Confirme agora ou perderá sua posição na fila.</p>
                                                 <button className="btn btn-primary btn-block" onClick={handleConfirmPresence}>
-                                                    Confirmar Agora
+                                                    Confirmar Presença
                                                 </button>
                                             </div>
                                         );
