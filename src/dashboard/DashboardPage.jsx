@@ -1189,6 +1189,71 @@ function SettingsSection({ form, setForm, onSave, saved, avatarUrl }) {
                     </button>
                 </div>
             </form>
+
+            {/* Share App Card */}
+            <ShareAppCard />
+        </div>
+    );
+}
+
+function ShareAppCard() {
+    const [copied, setCopied] = useState(false);
+
+    const handleShare = async () => {
+        const shareData = {
+            title: 'Zeta Barbershop',
+            text: 'Gerencia minha barbearia com fila inteligente, confirma\u00e7\u00e3o autom\u00e1tica e fidelidade. Experimenta gr\u00e1tis!',
+            url: `${window.location.origin}/auth/register`,
+        };
+        if (navigator.share) {
+            try { await navigator.share(shareData); } catch { /* dismissed */ }
+        } else {
+            try {
+                await navigator.clipboard.writeText(shareData.url);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2500);
+            } catch { /* ignore */ }
+        }
+    };
+
+    return (
+        <div
+            className="card card-glass"
+            style={{
+                margin: 'var(--space-6) 0 var(--space-4)',
+                padding: 'var(--space-5)',
+                border: '1px solid rgba(168,85,247,0.3)',
+                background: 'linear-gradient(135deg, rgba(168,85,247,0.06) 0%, rgba(34,211,238,0.04) 100%)',
+            }}
+        >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', marginBottom: 'var(--space-3)' }}>
+                <div style={{
+                    width: '42px', height: '42px', borderRadius: '50%',
+                    background: 'rgba(168,85,247,0.15)',
+                    border: '1px solid rgba(168,85,247,0.4)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '22px', color: 'var(--accent)' }}>group_add</span>
+                </div>
+                <div>
+                    <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)' }}>
+                        Indique para um amigo barbeiro
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        Compartilhe o Zeta com outros profissionais
+                    </div>
+                </div>
+            </div>
+            <button
+                onClick={handleShare}
+                className="btn btn-secondary"
+                style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            >
+                <span className="material-symbols-outlined" style={{ fontSize: '18px', color: copied ? '#4ade80' : 'var(--accent)' }}>
+                    {copied ? 'check_circle' : 'share'}
+                </span>
+                {copied ? 'Link copiado!' : 'Compartilhar Zeta Barbershop'}
+            </button>
         </div>
     );
 }
