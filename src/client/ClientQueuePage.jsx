@@ -341,6 +341,9 @@ export default function ClientQueuePage() {
         if (myEntryId) {
             confirmPresence(myEntryId);
             setShowConfirmModal(false);
+            // Clear the arrival countdown — client confirmed, timer no longer needed
+            setToleranceEnd(null);
+            setToleranceCountdown(null);
             sendNotification('Presença Confirmada!', 'Fique atento, em breve será sua vez!', 'zeta-confirmed');
         }
     }, [myEntryId, confirmPresence]);

@@ -73,8 +73,11 @@ function DashboardPage() {
     const mainRef = useRef(null);
     const [timeAnimation, setTimeAnimation] = useState(false);
     const [calledCustomer, setCalledCustomer] = useState(null);
-    // Derive activeClient directly from queue — no localStorage needed
-    const activeClient = queue.find(e => e.status === 'called') || null;
+    // Derive activeClient from queue; if none in 'called' state, fallback to the
+    // inServiceClient snapshot (so the card doesn't vanish when startService removes the entry)
+    const [inServiceClient, setInServiceClient] = useState(null);
+    const queueActiveClient = queue.find(e => e.status === 'called') || null;
+    const activeClient = queueActiveClient || inServiceClient;
     const [manualName, setManualName] = useState('');
     const [manualServices, setManualServices] = useState([]);
     const [settingsForm, setSettingsForm] = useState({});
@@ -121,11 +124,20 @@ function DashboardPage() {
     };
 
     const handleCallNext = async () => {
+        // Clear the previous inServiceClient snapshot so the new 'called' client takes over
+        setInServiceClient(null);
         const called = await callNext();
         if (called) {
             setCalledCustomer(called.customer_name);
             setTimeout(() => setCalledCustomer(null), 3000);
         }
+    };
+
+    const handleStartService = async (entryId) => {
+        // Save a snapshot of the client before removing them from the queue
+        const entry = queue.find(e => e.id === entryId);
+        if (entry) setInServiceClient({ ...entry, _inService: true });
+        await startService(entryId);
     };
 
     const handleResetWaitTime = async () => {
@@ -210,7 +222,7 @@ function DashboardPage() {
                         handleCallNext={handleCallNext}
                         removeFromQueue={removeFromQueue}
                         skipEntry={skipEntry}
-                        startService={startService}
+                        startService={handleStartService}
                         manualName={manualName}
                         setManualName={setManualName}
                         manualServices={manualServices}
@@ -478,11 +490,17 @@ function ActiveClientCanvas({ client, barbershop, startService }) {
                         fontSize: '10px',
                         textTransform: 'uppercase',
                         letterSpacing: '2px',
-                        color: 'var(--warning)',
+                        color: client._inService ? 'var(--accent)' : 'var(--warning)',
                         fontWeight: '600',
-                        opacity: 0.9
+                        opacity: 0.9,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
                     }}>
-                        ⏳ Aguardando Chegada
+                        <span className="material-symbols-outlined" style={{ fontSize: '14px' }}>
+                            {client._inService ? 'content_cut' : 'schedule'}
+                        </span>
+                        {client._inService ? 'Em Atendimento' : 'Aguardando Chegada'}
                     </span>
 
                     {/* Hero Typography */}
@@ -535,16 +553,18 @@ function ActiveClientCanvas({ client, barbershop, startService }) {
                 </div>
             )}
 
-            {/* Start Service CTA */}
-            <button
-                className="btn btn-primary"
-                onClick={handleStartService}
-                disabled={starting}
-                style={{ marginTop: 'var(--space-4)', width: '100%', position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-            >
-                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>play_circle</span>
-                {starting ? 'Iniciando...' : 'Iniciar Atendimento'}
-            </button>
+            {/* Start Service CTA — hidden when already in service */}
+            {!client._inService && (
+                <button
+                    className="btn btn-primary"
+                    onClick={handleStartService}
+                    disabled={starting}
+                    style={{ marginTop: 'var(--space-4)', width: '100%', position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                    <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>play_circle</span>
+                    {starting ? 'Iniciando...' : 'Iniciar Atendimento'}
+                </button>
+            )}
         </div>
     );
 }
