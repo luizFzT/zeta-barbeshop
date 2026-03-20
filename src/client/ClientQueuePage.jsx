@@ -7,8 +7,9 @@ import { SVGCursorTimeline } from '../core/components/SVGCursorTimeline';
 import { copyToClipboard } from '../shared/utils/clipboard';
 import './ClientQueuePage.css';
 
-// Helper: send notification via Service Worker or fallback
+// Helper: send notification via Service Worker or direct Notification API
 function sendNotification(title, body, tag) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
     try {
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({
@@ -17,8 +18,9 @@ function sendNotification(title, body, tag) {
                 body,
                 tag: tag || 'zeta-queue',
             });
-        } else if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification(title, { body, tag: tag || 'zeta-queue' });
+        } else {
+            // Fallback: direct Notification API when SW is not yet controlling
+            new Notification(title, { body, tag: tag || 'zeta-queue', icon: '/icons/icon-192.png' });
         }
     } catch { /* ignore */ }
 }
@@ -29,9 +31,9 @@ function registerServiceWorker() {
     }
 }
 
-function requestNotifPermission() {
+async function requestNotifPermission() {
     if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
+        await Notification.requestPermission();
     }
 }
 

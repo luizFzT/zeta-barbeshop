@@ -173,15 +173,6 @@ function getDemoFinancial(services) {
     try { localStorage.setItem(DEMO_FINANCIAL_KEY, JSON.stringify(data)); } catch { /* ignore */ }
     return data;
 }
-function saveDemoFinancial(f) {
-    try { localStorage.setItem(DEMO_FINANCIAL_KEY, JSON.stringify(f)); window.dispatchEvent(new Event('storage-local')); } catch (e) { console.error('Local storage error', e); }
-}
-function regenerateDemoFinancial(services) {
-    const data = generateDemoFinancial(services);
-    saveDemoFinancial(data);
-    return data;
-}
-
 export function BarbershopProvider({ children }) {
     const [barbershop, setBarbershop] = useState(null);
     const [queue, setQueue] = useState([]);
@@ -232,7 +223,7 @@ export function BarbershopProvider({ children }) {
             .from('queue_entries')
             .select('*')
             .eq('barbershop_id', barbershopId)
-            .eq('status', 'waiting')
+            .in('status', ['waiting', 'called'])
             .order('position', { ascending: true });
         if (data) setQueue(data);
     }
