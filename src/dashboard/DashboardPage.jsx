@@ -5,7 +5,6 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { SVGSoundwaves } from '../core/components/SVGSoundwaves';
 import { SVGMagnetLine } from '../core/components/SVGMagnetLine';
 import { copyToClipboard } from '../shared/utils/clipboard';
-import { supabase } from '../shared/services/supabase';
 import './DashboardPage.css';
 
 const TABS = [
@@ -46,7 +45,7 @@ export default function DashboardPageWrapper() {
 }
 
 function DashboardPage() {
-    const { user, isDemoMode } = useAuth();
+    const { user } = useAuth();
     const {
         barbershop,
         queue,
@@ -61,6 +60,7 @@ function DashboardPage() {
         updateWaitTime,
         resetWaitTime,
         callNext,
+        startService,
         removeFromQueue,
         addToQueue,
         subscribeRealtime,
@@ -73,12 +73,8 @@ function DashboardPage() {
     const mainRef = useRef(null);
     const [timeAnimation, setTimeAnimation] = useState(false);
     const [calledCustomer, setCalledCustomer] = useState(null);
-    const [activeClient, setActiveClient] = useState(() => {
-        try {
-            const saved = localStorage.getItem('zeta_active_client');
-            return saved ? JSON.parse(saved) : null;
-        } catch { return null; }
-    });
+    // Derive activeClient directly from queue — no localStorage needed
+    const activeClient = queue.find(e => e.status === 'called') || null;
     const [manualName, setManualName] = useState('');
     const [manualServices, setManualServices] = useState([]);
     const [settingsForm, setSettingsForm] = useState({});
@@ -127,16 +123,6 @@ function DashboardPage() {
     const handleCallNext = async () => {
         const called = await callNext();
         if (called) {
-            let withAvatar = { ...called };
-            if (called.user_id && !isDemoMode) {
-                try {
-                    const { data: profile } = await supabase.from('profiles').select('avatar_url').eq('id', called.user_id).maybeSingle();
-                    if (profile && profile.avatar_url) withAvatar.avatar_url = profile.avatar_url;
-                } catch (e) { console.error('Error fetching avatar', e); }
-            }
-            setActiveClient(withAvatar);
-            localStorage.setItem('zeta_active_client', JSON.stringify(withAvatar));
-
             setCalledCustomer(called.customer_name);
             setTimeout(() => setCalledCustomer(null), 3000);
         }
@@ -144,8 +130,6 @@ function DashboardPage() {
 
     const handleResetWaitTime = async () => {
         await resetWaitTime();
-        setActiveClient(null);
-        localStorage.removeItem('zeta_active_client');
     };
 
     const handleAddManual = async (e) => {
@@ -226,6 +210,7 @@ function DashboardPage() {
                         handleCallNext={handleCallNext}
                         removeFromQueue={removeFromQueue}
                         skipEntry={skipEntry}
+                        startService={startService}
                         manualName={manualName}
                         setManualName={setManualName}
                         manualServices={manualServices}
@@ -413,7 +398,8 @@ function ActiveServiceTimer({ barbershop, timeAnimation }) {
 }
 
 /* ===== ACTIVE CLIENT CANVAS COMPONENT ===== */
-function ActiveClientCanvas({ client, barbershop }) {
+function ActiveClientCanvas({ client, barbershop, startService }) {
+    const [starting, setStarting] = useState(false);
     if (!client || typeof client !== 'object') return null;
 
     const hasAvatar = typeof client.avatar_url === 'string' && client.avatar_url.trim() !== '';
@@ -422,6 +408,12 @@ function ActiveClientCanvas({ client, barbershop }) {
     // Services Badges
     const clientServicesIds = Array.isArray(client.selected_services) ? client.selected_services : [];
     const serviceDetails = clientServicesIds.map(sid => barbershop?.services?.find(s => s.id === sid)).filter(Boolean);
+
+    const handleStartService = async () => {
+        setStarting(true);
+        await startService(client.id);
+        setStarting(false);
+    };
 
     return (
         <div className="dash-card dash-active-client-canvas" style={{
@@ -486,11 +478,11 @@ function ActiveClientCanvas({ client, barbershop }) {
                         fontSize: '10px',
                         textTransform: 'uppercase',
                         letterSpacing: '2px',
-                        color: 'var(--primary)',
+                        color: 'var(--warning)',
                         fontWeight: '600',
-                        opacity: 0.8
+                        opacity: 0.9
                     }}>
-                        Cadeira Ativa
+                        ⏳ Aguardando Chegada
                     </span>
 
                     {/* Hero Typography */}
@@ -542,6 +534,17 @@ function ActiveClientCanvas({ client, barbershop }) {
                     ))}
                 </div>
             )}
+
+            {/* Start Service CTA */}
+            <button
+                className="btn btn-primary"
+                onClick={handleStartService}
+                disabled={starting}
+                style={{ marginTop: 'var(--space-4)', width: '100%', position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+            >
+                <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>play_circle</span>
+                {starting ? 'Iniciando...' : 'Iniciar Atendimento'}
+            </button>
         </div>
     );
 }
@@ -549,10 +552,13 @@ function ActiveClientCanvas({ client, barbershop }) {
 /* ===== QUEUE SECTION (Command Center) ===== */
 function QueueSection({
     barbershop, queue, timeAnimation, handleTimeChange, activeClient,
-    resetWaitTime, handleCallNext, removeFromQueue, skipEntry,
+    resetWaitTime, handleCallNext, removeFromQueue, skipEntry, startService,
     manualName, setManualName, handleAddManual,
     manualServices, toggleManualService, history, financialData
 }) {
+    // Only show clients still waiting — 'called' clients are shown in the Active Client Canvas
+    const waitingQueue = queue.filter(e => e.status === 'waiting');
+
     const todayRevenue = financialData
         ? financialData
             .filter(d => {
@@ -584,7 +590,7 @@ function QueueSection({
                         <span className="material-symbols-outlined stat-icon primary">groups</span>
                         <span className="stat-label">Restantes</span>
                     </div>
-                    <div className="stat-value">{queue.length}</div>
+                    <div className="stat-value">{waitingQueue.length}</div>
                     <div className="stat-subtext">na fila agora</div>
                 </div>
             </div>
@@ -633,9 +639,8 @@ function QueueSection({
                 )}
             </div>
 
-            {/* Active Client Canvas Display */}
             {activeClient && (
-                <ActiveClientCanvas client={activeClient} barbershop={barbershop} />
+                <ActiveClientCanvas client={activeClient} barbershop={barbershop} startService={startService} />
             )}
 
             {/* Time Control Card (Collapsible or subtle) */}
@@ -658,7 +663,7 @@ function QueueSection({
             <div className="dash-timeline-section">
                 <div className="dash-timeline-header">
                     <h2 className="dash-timeline-title">Fila de Espera</h2>
-                    {queue.length > 0 && (
+                    {waitingQueue.length > 0 && (
                         <button className="btn btn-primary btn-sm dash-call-btn" onClick={handleCallNext}>
                             <span className="material-symbols-outlined">notifications_active</span>
                             Chamar
@@ -666,14 +671,14 @@ function QueueSection({
                     )}
                 </div>
 
-                {queue.length === 0 ? (
+                {waitingQueue.length === 0 ? (
                     <div className="dash-empty">
                         <span className="material-symbols-outlined" style={{ fontSize: '48px', opacity: 0.5, marginBottom: 'var(--space-3)', display: 'block' }}>weekend</span>
                         <p>Nenhum cliente na fila</p>
                     </div>
                 ) : (
                     <div className="dash-timeline">
-                        {queue.map((entry, index) => {
+                        {waitingQueue.map((entry, index) => {
                             const isNext = index === 0 && entry.confirmation_status === 'none';
                             const isConfirmed = entry.confirmation_status === 'confirmed';
                             const isPending = entry.confirmation_status === 'pending';
@@ -685,7 +690,7 @@ function QueueSection({
                             return (
                                 <div key={entry.id} className={`dash-tl-item ${index === 0 ? 'is-next' : ''}`}>
                                     {/* Line connecting nodes */}
-                                    {index !== queue.length - 1 && <div className="dash-tl-line"></div>}
+                                    {index !== waitingQueue.length - 1 && <div className="dash-tl-line"></div>}
 
                                     {/* Avatar / Position Node */}
                                     <div className="dash-tl-node">

@@ -545,90 +545,86 @@ export function BarbershopProvider({ children }) {
     };
 
     const callNext = async () => {
-        if (queue.length === 0) return;
-        const next = queue[0];
+        // Only pick the first 'waiting' client
+        const next = queue.find(e => e.status === 'waiting');
+        if (!next) return null;
 
         if (isDemoMode) {
-            // Mark the next client as 'called' so tolerance timer fires on client page
+            // Mark the first waiting client as 'called' so tolerance timer fires on client page
             let calledQ;
             setQueue(prev => {
-                calledQ = prev.map((item, i) => i === 0 ? { ...item, status: 'called' } : item);
+                const idx = prev.findIndex(e => e.id === next.id);
+                calledQ = prev.map((item, i) => i === idx ? { ...item, status: 'called' } : item);
                 return calledQ;
             });
             setTimeout(() => saveDemoQueue(calledQ), 0);
-
-            // After a 4-second grace period, fully remove from queue
-            await new Promise(resolve => setTimeout(resolve, 4000));
-
-            let newQ;
-            setQueue(prev => {
-                newQ = prev.slice(1).map((item, i) => ({ ...item, position: i + 1 }));
-                return newQ;
-            });
-            setTimeout(() => saveDemoQueue(newQ), 0);
-
-            // Add to history
-            let newH;
-            setHistory(prev => {
-                const nowIso = new Date().toISOString();
-                const nowTime = new Date(nowIso).getTime();
-
-                // Remove previous entries for the exact same customer that happened in the last 60 seconds (double-click protection)
-                const filteredPrev = prev.filter(h => {
-                    const isSameName = h.customer_name.trim().toLowerCase() === next.customer_name.trim().toLowerCase();
-                    if (!isSameName) return true;
-
-                    const timeDiffValid = Math.abs(nowTime - new Date(h.served_at).getTime()) > 60000;
-                    return timeDiffValid;
-                });
-
-                newH = [{
-                    id: `h-${Date.now()}`,
-                    customer_name: next.customer_name,
-                    served_at: nowIso,
-                }, ...filteredPrev];
-                return newH;
-            });
-            setTimeout(() => saveDemoHistory(newH), 0);
-
-            // Update loyalty — increment visits
-            if (next.user_id) {
-                let newLoyalty;
-                setLoyalty(prev => {
-                    newLoyalty = prev.map(l => {
-                        if (l.user_id === next.user_id) {
-                            return { ...l, visits: l.visits + 1, last_visit: new Date().toISOString() };
-                        }
-                        return l;
-                    });
-                    return newLoyalty;
-                });
-                setTimeout(() => saveDemoLoyalty(newLoyalty), 0);
-            }
-
-            // Update stats
-            setStats(prev => ({ ...prev, todayServed: prev.todayServed + 1 }));
-
-            // Update chair active time for demo mode
-            setBarbershop(prev => {
-                const chairTime = next.total_duration || 25;
-                const updated = { ...prev, wait_time_minutes: chairTime, updated_at: new Date().toISOString() };
-                localStorage.setItem('zeta_demo_shop', JSON.stringify(updated));
-                window.dispatchEvent(new Event('storage-local'));
-                return updated;
-            });
-
             return next;
         }
 
+        // Supabase: only update status to 'called' — timer starts when barber clicks "Iniciar Atendimento"
         await supabase
             .from('queue_entries')
             .update({ status: 'called' })
             .eq('id', next.id);
 
-        // Update Barbershop with the new chair time (the called client's expected duration)
-        const chairTime = next.total_duration || 25;
+        // fetchQueue will be triggered by realtime subscription
+        return next;
+    };
+
+    const startService = async (entryId) => {
+        const entry = queue.find(e => e.id === entryId);
+        if (!entry) return;
+
+        const chairTime = entry.total_duration || barbershop?.wait_time_minutes || 25;
         const nowIso = new Date().toISOString();
+
+        if (isDemoMode) {
+            // Start the barbershop timer
+            setBarbershop(prev => {
+                const updated = { ...prev, wait_time_minutes: chairTime, updated_at: nowIso };
+                localStorage.setItem('zeta_demo_shop', JSON.stringify(updated));
+                window.dispatchEvent(new Event('storage-local'));
+                return updated;
+            });
+
+            // Remove from queue
+            let newQ;
+            setQueue(prev => {
+                newQ = prev.filter(e => e.id !== entryId).map((item, i) => ({ ...item, position: i + 1 }));
+                return newQ;
+            });
+            setTimeout(() => saveDemoQueue(newQ), 0);
+
+            // Log to history
+            let newH;
+            setHistory(prev => {
+                const filteredPrev = prev.filter(h => {
+                    const isSameName = h.customer_name.trim().toLowerCase() === entry.customer_name.trim().toLowerCase();
+                    if (!isSameName) return true;
+                    return Math.abs(Date.now() - new Date(h.served_at).getTime()) > 60000;
+                });
+                newH = [{ id: `h-${Date.now()}`, customer_name: entry.customer_name, served_at: nowIso }, ...filteredPrev];
+                return newH;
+            });
+            setTimeout(() => saveDemoHistory(newH), 0);
+
+            // Update loyalty
+            if (entry.user_id) {
+                let newLoyalty;
+                setLoyalty(prev => {
+                    newLoyalty = prev.map(l =>
+                        l.user_id === entry.user_id ? { ...l, visits: l.visits + 1, last_visit: nowIso } : l
+                    );
+                    return newLoyalty;
+                });
+                setTimeout(() => saveDemoLoyalty(newLoyalty), 0);
+            }
+
+            setStats(prev => ({ ...prev, todayServed: prev.todayServed + 1 }));
+            return;
+        }
+
+        // Supabase: start barbershop service timer
         await supabase
             .from('barbershops')
             .update({ wait_time_minutes: chairTime, updated_at: nowIso })
@@ -636,8 +632,8 @@ export function BarbershopProvider({ children }) {
 
         setBarbershop(prev => prev ? { ...prev, wait_time_minutes: chairTime, updated_at: nowIso } : prev);
 
-        // Re-number positions
-        const remaining = queue.slice(1);
+        // Re-number positions for remaining 'waiting' entries
+        const remaining = queue.filter(e => e.id !== entryId && e.status === 'waiting');
         for (let i = 0; i < remaining.length; i++) {
             await supabase
                 .from('queue_entries')
@@ -645,77 +641,62 @@ export function BarbershopProvider({ children }) {
                 .eq('id', remaining[i].id);
         }
 
+        // Delete the 'called' entry
+        await supabase.from('queue_entries').delete().eq('id', entryId);
+
         // Increment loyalty visits
-        if (next.user_id) {
+        if (entry.user_id) {
             const { data: loyaltyData } = await supabase
-                .from('loyalty')
-                .select('*')
+                .from('loyalty').select('*')
                 .eq('barbershop_id', barbershop.id)
-                .eq('user_id', next.user_id)
+                .eq('user_id', entry.user_id)
                 .single();
 
             if (loyaltyData) {
-                await supabase
-                    .from('loyalty')
-                    .update({
-                        visits: loyaltyData.visits + 1,
-                        last_visit: new Date().toISOString(),
-                    })
+                await supabase.from('loyalty')
+                    .update({ visits: loyaltyData.visits + 1, last_visit: nowIso })
                     .eq('id', loyaltyData.id);
             } else {
-                await supabase
-                    .from('loyalty')
-                    .insert([{
-                        barbershop_id: barbershop.id,
-                        user_id: next.user_id,
-                        customer_name: next.customer_name,
-                        visits: 1,
-                        last_visit: new Date().toISOString(),
-                    }]);
+                await supabase.from('loyalty').insert([{
+                    barbershop_id: barbershop.id,
+                    user_id: entry.user_id,
+                    customer_name: entry.customer_name,
+                    visits: 1,
+                    last_visit: nowIso,
+                }]);
             }
         }
 
-        // Insert into service_history for financial / stats tracking
-        if (next.selected_services && next.selected_services.length > 0 && barbershop?.services) {
-            const historyRecords = next.selected_services.map(srvId => {
+        // Log to service_history
+        if (entry.selected_services?.length > 0 && barbershop?.services) {
+            const historyRecords = entry.selected_services.map(srvId => {
                 const serviceMatch = barbershop.services.find(s => s.id === srvId);
                 return {
                     barbershop_id: barbershop.id,
-                    user_id: next.user_id || null,
-                    customer_name: next.customer_name,
+                    user_id: entry.user_id || null,
+                    customer_name: entry.customer_name,
                     service_id: srvId,
-                    service_name: serviceMatch ? serviceMatch.name : 'Serviço Personalizado',
-                    price: serviceMatch ? Number(serviceMatch.price) || 0 : 0,
-                    served_at: new Date().toISOString()
+                    service_name: serviceMatch?.name || 'Serviço Personalizado',
+                    price: Number(serviceMatch?.price) || 0,
+                    served_at: nowIso,
                 };
             });
-
-            const { error: historyError } = await supabase
-                .from('service_history')
-                .insert(historyRecords);
-
-            if (historyError) {
-                console.error('[callNext] Error logging service history:', historyError);
-            }
+            await supabase.from('service_history').insert(historyRecords);
         } else {
-            // Se o usuário não selecionou serviços, gera um ticket zerado só para constar na estatística diária e histórico
             await supabase.from('service_history').insert([{
                 barbershop_id: barbershop.id,
-                user_id: next.user_id || null,
-                customer_name: next.customer_name,
+                user_id: entry.user_id || null,
+                customer_name: entry.customer_name,
                 service_id: null,
                 service_name: 'Corte (Não especificado)',
                 price: 0,
-                served_at: new Date().toISOString()
+                served_at: nowIso,
             }]);
         }
 
-        setQueue(remaining.map((item, i) => ({ ...item, position: i + 1 })));
-
-        // Atualiza as finanças para refletir a nova venda no painel
+        // Refresh data
+        await fetchQueue(barbershop.id);
         await fetchStatsAndFinancial(barbershop.id);
-
-        return next;
     };
 
     const removeFromQueue = async (entryId) => {
@@ -999,6 +980,7 @@ export function BarbershopProvider({ children }) {
             resetWaitTime,
             addToQueue,
             callNext,
+            startService,
             removeFromQueue,
             requestConfirmation,
             confirmPresence,
