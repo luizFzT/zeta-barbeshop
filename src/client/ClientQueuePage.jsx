@@ -931,7 +931,10 @@ export default function ClientQueuePage() {
                                                     </svg>
                                                     Entrar com Google
                                                 </button>
-                                                <p style={{ fontSize: '11px', textAlign: 'center', color: 'var(--text-muted)', margin: '8px 0 24px' }}>💡 Acumule pontos no programa de fidelidade.</p>
+                                                <p style={{ fontSize: '11px', textAlign: 'center', color: 'var(--text-muted)', margin: '8px 0 24px' }}>
+                                                    <span className="material-symbols-outlined" style={{ fontSize: '14px', verticalAlign: 'middle', marginRight: '4px', color: 'var(--accent)' }}>tips_and_updates</span>
+                                                    Acumule pontos no programa de fidelidade.
+                                                </p>
 
                                                 <div style={{ display: 'flex', alignItems: 'center', margin: '16px 0' }}>
                                                     <div style={{ flex: 1, height: '1px', background: 'var(--border)' }}></div>
@@ -953,8 +956,18 @@ export default function ClientQueuePage() {
                                 {/* Location & Info */}
                                 {(barbershop.phone || barbershop.address) && (
                                     <div className="card card-glass text-center" style={{ marginTop: 'var(--space-6)', padding: 'var(--space-4)', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                        {barbershop.phone && <div style={{ marginBottom: '4px' }}>📞 {barbershop.phone}</div>}
-                                        {barbershop.address && <div>📍 {barbershop.address}</div>}
+                                        {barbershop.phone && (
+                                            <div style={{ marginBottom: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--accent)' }}>call</span>
+                                                {barbershop.phone}
+                                            </div>
+                                        )}
+                                        {barbershop.address && (
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                <span className="material-symbols-outlined" style={{ fontSize: '16px', color: 'var(--accent)' }}>location_on</span>
+                                                {barbershop.address}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -964,9 +977,11 @@ export default function ClientQueuePage() {
             </div>
             {
                 showConfirmModal && (
-                    <div className="cq-confirm-overlay animate-fade-in">
-                        <div className="cq-confirm-modal">
-                            <div className="cq-confirm-icon">⏰</div>
+                    <div className="cq-confirm-overlay">
+                        <div className="cq-confirm-modal animate-scale-in">
+                            <div className="cq-confirm-icon-wrapper">
+                                <span className="material-symbols-outlined cq-confirm-icon-svg">notifications_active</span>
+                            </div>
                             <h2 className="cq-confirm-title">Confirme sua presença!</h2>
                             <p className="cq-confirm-desc">Faltam poucos minutos para ser chamado.</p>
                             <p className="cq-confirm-desc">Confirme que está a caminho ou perderá sua vez.</p>
@@ -977,7 +992,7 @@ export default function ClientQueuePage() {
                                 <span className="cq-confirm-clock-label">para confirmar</span>
                             </div>
                             <button className="btn btn-primary btn-lg cq-confirm-btn" onClick={handleConfirmPresence}>
-                                ✅ Estou Chegando!
+                                Estou Chegando!
                             </button>
                         </div>
                     </div>
@@ -1012,10 +1027,18 @@ export default function ClientQueuePage() {
 
                             <div className="cq-share-tips">
                                 <div className="cq-share-tip">
-                                    <strong>📱 iOS (Safari):</strong> Toque em <kbd>Compartilhar</kbd> e depois <strong>"Adicionar à Tela de Início"</strong>.
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                        <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent)' }}>smartphone</span>
+                                        <strong>iOS (Safari):</strong>
+                                    </div>
+                                    <p style={{ fontSize: '12px', margin: 0 }}>Toque em <kbd>Compartilhar</kbd> e depois <strong>"Adicionar à Tela de Início"</strong>.</p>
                                 </div>
                                 <div className="cq-share-tip">
-                                    <strong>🤖 Android (Chrome):</strong> Toque em <kbd>⋮</kbd> e depois <strong>"Adicionar à tela inicial"</strong>.
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                        <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--accent)' }}>robot_2</span>
+                                        <strong>Android (Chrome):</strong>
+                                    </div>
+                                    <p style={{ fontSize: '12px', margin: 0 }}>Toque em <kbd>⋮</kbd> e depois <strong>"Adicionar à tela inicial"</strong>.</p>
                                 </div>
                             </div>
 
