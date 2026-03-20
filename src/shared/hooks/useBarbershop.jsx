@@ -562,12 +562,18 @@ export function BarbershopProvider({ children }) {
         }
 
         // Supabase: only update status to 'called' — timer starts when barber clicks "Iniciar Atendimento"
-        await supabase
+        const { error } = await supabase
             .from('queue_entries')
             .update({ status: 'called' })
             .eq('id', next.id);
 
-        // fetchQueue will be triggered by realtime subscription
+        if (!error) {
+            // Optimistic update: apply state change immediately so the UI
+            // doesn't wait 1-3s for the Realtime event to arrive.
+            // This prevents the barber needing to click twice.
+            setQueue(prev => prev.map(e => e.id === next.id ? { ...e, status: 'called' } : e));
+        }
+
         return next;
     };
 
@@ -717,7 +723,10 @@ export function BarbershopProvider({ children }) {
             return;
         }
 
-        // Renumber remaining entries sequentially to avoid gaps
+        // Optimistic update: remove entry and re-number locally immediately
+        setQueue(prev => prev.filter(e => e.id !== entryId).map((item, i) => ({ ...item, position: i + 1 })));
+
+        // Renumber remaining entries sequentially on the server to avoid gaps
         const { data: remaining } = await supabase
             .from('queue_entries')
             .select('id, position')
