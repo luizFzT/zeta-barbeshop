@@ -11,38 +11,37 @@ The system calculates estimated wait times based on the complex physical reality
 ## 🚀 Features
 
 ### For the Barber (Dashboard)
-- **Real-Time Queue:** Add, remove, or call the next client in the queue with real-time updates pushed to all devices.
+- **Real-Time Queue:** Add, remove, or call the next client in the queue with instantaneous optimistic UI updates and Supabase Realtime synchronization.
 - **Smart Analytics:** Automatically tracks total clients served and average service times to provide powerful business insights.
 - **Dynamic Services:** Configure specific services (e.g., Fade, Beard, Eyebrows) with accurate durations, which the system uses to crunch live wait-time estimates.
-- **Barber Profile:** Upload a unique professional identity (Name and Photo) completely separate from the Barbershop branding to humanize the user experience.
+- **Barber Profile & Referral System:** Upload a professional identity and share the app easily with other barbers using the native Web Share API.
 - **QR Code Generator:** Built-in QR Code generation for the Barbershop storefront, ready to print and display on the counter.
 
-### For the Client (Client App)
-### For the Client (Client App)
-- **High-Fidelity Proportional Timer:** An elegant, gamified countdown dashboard. The "Tempo Estimado" ring is a mathematical progress bar that shrinks in physical length as the wait time decreases, synchronized with a glowing focus dot.
-- **Live Tracking:** Real-time updates on queue position and estimated journey.
-- **Zero Friction:** No app installation required. Clients scan a QR code and join directly via the WebApp.
-- **Service Selection:** Clients select exactly what cut they want so the algorithm knows how long they will take.
+### For the Client (Queue App)
+- **High-Fidelity Proportional Timer:** An elegant, gamified countdown dashboard. The "Tempo Estimado" ring is a mathematical progress bar that shrinks in physical length as the wait time decreases.
+- **Live Tracking & Notifications:** Real-time updates on queue position, plus PWA Push Notifications to alert you when it's your turn.
+- **Zero Friction:** No app store installation required. Clients scan a QR code and join directly via the WebApp, with a localized PWA install prompt.
+- **Smart Confirmation Flow:** System automatically asks for presence confirmation when the wait time goes below 15 minutes, with a tolerance timer to avoid line-skipping abuse.
 
 ## 🎨 Design System
 
 We employ a premium, cyberpunk-inspired **Dark Mode Glassmorphism** aesthetic.
-- **Deep Navy/Black backgrounds:** (`#0a061e`)
+- **Deep Navy/Black backgrounds:** (`#0a061e` to `#09090B`)
 - **Single Accent Identity:** Exclusively using Neon Purple (`#a855f7`) to create a focused, professional high-end brand feel.
-- **Ambient Texture:** Subtle horizontal line patterns representing the flow of time and digital organization.
-- **Frosted Glass:** Translucent cards (`rgba(30, 27, 75, 0.4)`) with subtle glow borders.
+- **Frosted Glass:** Translucent cards with subtle glow borders and optimized spacing metrics.
+- **No Emojis:** We enforce a strict professional look using Material Symbols instead of standard emojis.
 
 ## 🛠 Tech Stack
 
 - **Frontend:** React 19, Vite, React Router DOM
-- **Backend (Upcoming):** Supabase (PostgreSQL, Auth, Edge Functions)
+- **Backend & Database:** Supabase (PostgreSQL, Auth)
 - **Realtime:** Supabase Realtime Subscriptions
-- **Payments (Upcoming):** Stripe Integration
 - **Styling:** Standard CSS with custom design variables (No heavy frameworks for maximum speed).
+- **PWA:** Native Service Workers for notifications and offline install prompts.
 
 ## 💻 Getting Started (Local Development)
 
-Currently, the project runs in **Demo Mode**, utilizing `localStorage` and custom events to simulate real-time behavior without needing a backend connection.
+The project connects to Supabase, but also features a fallback **Demo Mode** leveraging `localStorage` for quick aesthetic testing without a backend connection.
 
 1. **Clone the repository:**
    ```bash
@@ -53,13 +52,19 @@ Currently, the project runs in **Demo Mode**, utilizing `localStorage` and custo
    ```bash
    npm install
    ```
-3. **Start the development server:**
+3. **Environment Variables:**
+   Create a `.env` file referencing your Supabase project keys (see documentation for required variables).
+
+4. **Start the development server:**
    ```bash
    npm run dev
    ```
 
-## 📄 Documentation
-For an in-depth look at our architecture, UX flows, and Data Models, please check the [ZETA_BARBERSHOP_DOCS.md](ZETA_BARBERSHOP_DOCS.md) inside the repository.
+## 📄 Documentation & Roadmap
+
+- **Architecture & UX Flows:** Check the [ZETA_BARBERSHOP_DOCS.md](ZETA_BARBERSHOP_DOCS.md) inside the repository.
+- **Supabase Migration Plan:** We have mapped out a robust single-source-of-truth refactor in [SUPABASE_MIGRATION_PLAN.md](SUPABASE_MIGRATION_PLAN.md).
+- **Future Roadmap:** See [ZETA_FUTURE_ROADMAP.md](ZETA_FUTURE_ROADMAP.md) for upcoming features like Stripe integration and advanced loyalty metrics.
 
 ---
 
