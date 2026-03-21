@@ -170,8 +170,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Background Ambient Glow */
-/* Textura Ambiente OBRIGATÓRIA: Padrão sutil "Linhas de Fluxo" no background */
+/* Background scanline texture — removed (was causing visible horizontal lines in dark mode)
 body::before {
   content: '';
   position: fixed;
@@ -191,6 +190,7 @@ body::before {
 body.light-theme::before {
   opacity: 0;
 }
+*/
 
 #root {
   min-height: 100vh;
