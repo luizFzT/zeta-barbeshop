@@ -112,11 +112,11 @@ export default function ClientQueuePage() {
         }
     }, [user, queue, myEntryId]);
 
-    // Auto-resume for GUEST users via localStorage
+    // Auto-resume for GUEST users via sessionStorage
     useEffect(() => {
         if (user || myEntryId || !barbershop) return; // skip if logged in or already resumed
         try {
-            const saved = localStorage.getItem('zeta-guest-queue');
+            const saved = sessionStorage.getItem('zeta-guest-queue');
             if (!saved) return;
             const session = JSON.parse(saved);
             if (session.barbershop_id !== barbershop.id) return; // different shop
@@ -132,7 +132,7 @@ export default function ClientQueuePage() {
                 setGuestName(existingEntry.customer_name);
             } else {
                 // Entry no longer active, clear the stale session
-                localStorage.removeItem('zeta-guest-queue');
+                sessionStorage.removeItem('zeta-guest-queue');
             }
         } catch { /* ignore */ }
     }, [user, myEntryId, barbershop, queue]);
@@ -398,10 +398,10 @@ export default function ClientQueuePage() {
                 registerServiceWorker();
                 requestNotifPermission();
 
-                // Save guest session to localStorage (for non-logged visitors)
+                // Save guest session to sessionStorage (for non-logged visitors)
                 if (!user) {
                     try {
-                        localStorage.setItem('zeta-guest-queue', JSON.stringify({
+                        sessionStorage.setItem('zeta-guest-queue', JSON.stringify({
                             barbershop_id: barbershop.id,
                             entry_id: entry.id,
                         }));

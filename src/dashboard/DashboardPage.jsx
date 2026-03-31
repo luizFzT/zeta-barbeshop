@@ -21,7 +21,9 @@ class ErrorBoundary extends Component {
         return { hasError: true, error };
     }
     componentDidCatch(error, errorInfo) {
-        localStorage.setItem('ZETA_CRASH', error.toString() + '\n' + error.stack + '\n' + errorInfo.componentStack);
+        if (import.meta.env.DEV) {
+            localStorage.setItem('ZETA_CRASH', error.toString() + '\n' + error.stack + '\n' + errorInfo.componentStack);
+        }
     }
     render() {
         if (this.state.hasError) {
@@ -715,7 +717,7 @@ function QueueSection({
                                     {/* Avatar / Position Node */}
                                     <div className="dash-tl-node">
                                         {entry.user_id ? (
-                                            <div className="dash-tl-avatar google-auth" style={{ backgroundImage: `url('https://ui-avatars.com/api/?name=${entry.customer_name}&background=1a1a2e&color=a855f7')` }}></div>
+                                            <div className="dash-tl-avatar google-auth" style={{ backgroundImage: `url('https://ui-avatars.com/api/?name=${encodeURIComponent(entry.customer_name)}&background=1a1a2e&color=a855f7')` }}></div>
                                         ) : (
                                             <div className="dash-tl-avatar manual-auth">{initials}</div>
                                         )}
