@@ -27,13 +27,15 @@ CREATE TABLE IF NOT EXISTS public.barbershops (
 
 ALTER TABLE public.barbershops ENABLE ROW LEVEL SECURITY;
 
--- Owner pode fazer TUDO (inclusive WITH CHECK para UPDATE/INSERT)
+-- Owner pode fazer TUDO — usando (select auth.uid()) para evitar re-avaliação por linha
 CREATE POLICY "barbershops_owner_all" ON public.barbershops
-  FOR ALL USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
+  FOR ALL USING ((select auth.uid()) = owner_id) WITH CHECK ((select auth.uid()) = owner_id);
 
 -- Qualquer pessoa pode LER (página do cliente)
 CREATE POLICY "barbershops_public_read" ON public.barbershops
   FOR SELECT USING (true);
+
+CREATE INDEX IF NOT EXISTS idx_barbershops_owner_id ON public.barbershops(owner_id);
 
 
 -- 2. SERVICES (tabela separada para serviços de cada barbearia)
@@ -50,13 +52,15 @@ ALTER TABLE public.services ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "services_owner_all" ON public.services
   FOR ALL USING (
-    auth.uid() = (SELECT owner_id FROM public.barbershops WHERE id = barbershop_id)
+    (select auth.uid()) = (SELECT owner_id FROM public.barbershops WHERE id = barbershop_id)
   ) WITH CHECK (
-    auth.uid() = (SELECT owner_id FROM public.barbershops WHERE id = barbershop_id)
+    (select auth.uid()) = (SELECT owner_id FROM public.barbershops WHERE id = barbershop_id)
   );
 
 CREATE POLICY "services_public_read" ON public.services
   FOR SELECT USING (true);
+
+CREATE INDEX IF NOT EXISTS idx_services_barbershop_id ON public.services(barbershop_id);
 
 
 -- 3. QUEUE ENTRIES (fila de espera)
@@ -81,7 +85,7 @@ ALTER TABLE public.queue_entries ENABLE ROW LEVEL SECURITY;
 -- Dono da barbearia controla tudo na fila
 CREATE POLICY "queue_owner_all" ON public.queue_entries
   FOR ALL USING (
-    auth.uid() = (SELECT owner_id FROM public.barbershops WHERE id = barbershop_id)
+    (select auth.uid()) = (SELECT owner_id FROM public.barbershops WHERE id = barbershop_id)
   );
 
 -- Qualquer pessoa pode entrar na fila (INSERT)
@@ -94,12 +98,15 @@ CREATE POLICY "queue_public_read" ON public.queue_entries
 
 -- Cliente pode atualizar seu próprio registro (confirmar presença)
 CREATE POLICY "queue_client_update_own" ON public.queue_entries
-  FOR UPDATE USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  FOR UPDATE USING ((select auth.uid()) = user_id)
+  WITH CHECK ((select auth.uid()) = user_id);
 
 -- Cliente pode sair da fila (deletar)
 CREATE POLICY "queue_client_delete_own" ON public.queue_entries
-  FOR DELETE USING (auth.uid() = user_id);
+  FOR DELETE USING ((select auth.uid()) = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_queue_entries_barbershop_id ON public.queue_entries(barbershop_id);
+CREATE INDEX IF NOT EXISTS idx_queue_entries_user_id ON public.queue_entries(user_id);
 
 
 -- 4. LOYALTY (programa de fidelidade)
@@ -120,21 +127,25 @@ ALTER TABLE public.loyalty ENABLE ROW LEVEL SECURITY;
 -- Dono vê todos os clientes fidelidade
 CREATE POLICY "loyalty_owner_all" ON public.loyalty
   FOR ALL USING (
-    auth.uid() = (SELECT owner_id FROM public.barbershops WHERE id = barbershop_id)
+    (select auth.uid()) = (SELECT owner_id FROM public.barbershops WHERE id = barbershop_id)
   );
 
 -- Cliente vê seu próprio registro
 CREATE POLICY "loyalty_client_read_own" ON public.loyalty
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING ((select auth.uid()) = user_id);
 
--- Sistema pode criar registro de fidelidade para clientes
+-- Sistema pode criar registro de fidelidade — restrito: user_id nulo (guest) ou do próprio usuário
 CREATE POLICY "loyalty_client_insert" ON public.loyalty
-  FOR INSERT WITH CHECK (true);
+  FOR INSERT WITH CHECK (
+    user_id IS NULL OR user_id = (select auth.uid())
+  );
 
 -- Cliente pode atualizar seu próprio registro
 CREATE POLICY "loyalty_client_update_own" ON public.loyalty
-  FOR UPDATE USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  FOR UPDATE USING ((select auth.uid()) = user_id)
+  WITH CHECK ((select auth.uid()) = user_id);
+
+CREATE INDEX IF NOT EXISTS idx_loyalty_user_id ON public.loyalty(user_id);
 
 
 -- 5. SERVICE HISTORY (histórico e financeiro)
@@ -153,8 +164,12 @@ ALTER TABLE public.service_history ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "history_owner_all" ON public.service_history
   FOR ALL USING (
-    auth.uid() = (SELECT owner_id FROM public.barbershops WHERE id = barbershop_id)
+    (select auth.uid()) = (SELECT owner_id FROM public.barbershops WHERE id = barbershop_id)
   );
+
+CREATE INDEX IF NOT EXISTS idx_service_history_barbershop_id ON public.service_history(barbershop_id);
+CREATE INDEX IF NOT EXISTS idx_service_history_user_id ON public.service_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_service_history_service_id ON public.service_history(service_id);
 
 
 -- 6. ENABLE REALTIME para fila e barbearias
@@ -162,4 +177,4 @@ ALTER PUBLICATION supabase_realtime ADD TABLE public.barbershops;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.queue_entries;
 
 
--- ✅ PRONTO! Schema completo com RLS para multi-barbearia.
+-- ✅ PRONTO! Schema completo com RLS otimizado para multi-barbearia.
